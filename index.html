@@ -219,6 +219,28 @@
         <button class="langbtn" id="lang-en" type="button">English</button>
       </div>
 
+      <nav class="toggle2" aria-label="Mode / Modo" style="margin-bottom:20px">
+        <button id="mode-shop" type="button" aria-pressed="true">Negocio local / Local shop</button>
+        <button id="mode-mnq" type="button" aria-pressed="false">MNQ · X posts</button>
+      </nav>
+      <section id="scr-mnq" hidden>
+        <h1 data-mnq="title"></h1>
+        <p data-mnq="intro"></p>
+        <p class="honest" data-mnq="honest"></p>
+        <form id="mnq-form">
+          <label for="mnq-snapshot" data-mnq="snapshot"></label>
+          <textarea id="mnq-snapshot" rows="5" spellcheck="false"></textarea>
+          <p class="small muted" data-mnq="structure"></p>
+          <div id="mnq-inputs"></div>
+          <button class="btn ghost" id="mnq-add" type="button" data-mnq="add"></button>
+          <label for="mnq-chart" data-mnq="chart"></label>
+          <textarea id="mnq-chart" spellcheck="false"></textarea>
+          <button class="btn" type="submit" data-mnq="make"></button>
+        </form>
+        <p id="mnq-status" role="status" aria-live="polite"></p>
+        <div id="mnq-outputs"></div>
+      </section>
+
       <!-- ===================== HOME ===================== -->
       <section id="scr-home">
 
@@ -722,7 +744,7 @@ function digitsOf(phone){ return (phone||"").replace(/\D/g,""); }
 
 function showScreen(id){
   if (typeof stopVideo === "function") stopVideo();
-  ["scr-home","scr-confirm","scr-result","scr-check","scr-week"].forEach(function(s){ $(s).hidden = (s!==id); });
+  ["scr-home","scr-confirm","scr-result","scr-check","scr-week","scr-mnq"].forEach(function(s){ $(s).hidden = (s!==id); });
   window.scrollTo(0,0);
 }
 
@@ -2041,6 +2063,80 @@ $("back-result1").addEventListener("click", function(){ showScreen("scr-result")
 $("back-result2").addEventListener("click", function(){ showScreen("scr-result"); });
 
 applyLang();
+</script>
+
+<script>
+/* MNQ is a literal formatter: it never calls the local-business parser. */
+(function(){
+  var strings={
+    en:{title:'MNQ snapshot → X posts',intro:'Paste the snapshot and each post separately. Your text and numbers stay verbatim; long text becomes a numbered thread.',honest:'Local formatting only. No live data, AI analysis, chart reading, translation or publishing. Paste chart descriptions as text. Review each thread together with its snapshot before sharing.',snapshot:'Market snapshot (optional)',structure:'Keep Context → Location → Trigger → Risk in your source text. Missing facts are never invented. Nothing is saved after this page closes.',post:'Post',add:'Add another post',chart:'Chart description (optional text)',make:'Prepare X threads',empty:'Paste a snapshot, a post or a chart description first.',stale:'Inputs changed. Prepare the threads again.',done:'Threads ready. Copy each part in order. Review live prices and your risk first.',copy:'Copy',copied:'Copied.',failed:'Copy failed. Select and copy the text manually.',caution:'Approx./delayed; verify live. Educational only. Risk first.',part:'part'},
+    es:{title:'Resumen MNQ → posts para X',intro:'Pega el resumen y cada post por separado. Tu texto y tus números se conservan literalmente; el texto largo se divide en un hilo numerado.',honest:'Formato local solamente. Sin datos en vivo, análisis de IA, lectura de gráficos, traducción ni publicación. Pega las descripciones de gráficos como texto. Revisa cada hilo junto con su resumen antes de compartir.',snapshot:'Resumen del mercado (opcional)',structure:'Conserva Contexto → Ubicación → Disparador → Riesgo en tu texto. No se inventan datos faltantes. Nada se guarda al cerrar esta página.',post:'Post',add:'Agregar otro post',chart:'Descripción del gráfico (texto opcional)',make:'Preparar hilos para X',empty:'Pega un resumen, un post o una descripción primero.',stale:'Cambió el texto. Prepara los hilos otra vez.',done:'Hilos listos. Copia cada parte en orden. Verifica precios en vivo y tu riesgo primero.',copy:'Copiar',copied:'Copiado.',failed:'No se pudo copiar. Selecciona y copia el texto manualmente.',caution:'Aprox./retrasado; verifica en vivo. Solo educativo. Riesgo primero.',part:'parte'}
+  };
+  var count=0;
+  function t(k){return strings[lang][k];}
+  function invalidate(){ $('mnq-outputs').replaceChildren(); $('mnq-status').textContent=t('stale'); }
+  function translate(){
+    document.querySelectorAll('[data-mnq]').forEach(function(el){el.textContent=t(el.dataset.mnq);});
+    document.querySelectorAll('[data-mnq-post]').forEach(function(el){el.textContent=t('post')+' '+el.dataset.mnqPost;});
+    invalidate();
+  }
+  function addPost(){
+    count++;
+    var box=document.createElement('div'),label=document.createElement('label'),input=document.createElement('textarea');
+    label.htmlFor=input.id='mnq-post-'+count;
+    label.dataset.mnqPost=count; label.textContent=t('post')+' '+count;
+    input.spellcheck=false; input.className='mnq-source';
+    box.append(label,input); $('mnq-inputs').append(box); input.focus(); invalidate();
+  }
+  // Keep every source character, including whitespace, in order. Never cut a token.
+  function weight(text){return Array.from(text).reduce(function(n,c){return n+(c.codePointAt(0)>4351?2:1);},0);}
+  function chunks(text){
+    var units=text.match(/\s+|\S+/gu)||[],out=[],current='';
+    units.forEach(function(unit){
+      if(weight(unit)>150) throw new Error(lang==='es'?'Hay un bloque sin espacios demasiado largo; agrega espacios antes de preparar.':'A block without spaces is too long; add spaces before preparing.');
+      if(weight(current+unit)>150){out.push(current);current='';}
+      current+=unit;
+    });
+    if(current)out.push(current);
+    return out;
+  }
+  $('mode-mnq').onclick=function(){showScreen('scr-mnq');$('mode-mnq').setAttribute('aria-pressed','true');$('mode-shop').setAttribute('aria-pressed','false');};
+  $('mode-shop').onclick=function(){showScreen('scr-home');$('mode-shop').setAttribute('aria-pressed','true');$('mode-mnq').setAttribute('aria-pressed','false');};
+  $('mnq-add').onclick=addPost;
+  $('mnq-form').addEventListener('input',invalidate);
+  ['lang-es','lang-en'].forEach(function(id){$(id).addEventListener('click',translate);});
+  $('mnq-form').onsubmit=function(event){
+    event.preventDefault();$('mnq-outputs').replaceChildren();
+    var sources=[{name:t('snapshot'),text:$('mnq-snapshot').value}];
+    document.querySelectorAll('.mnq-source').forEach(function(el,i){sources.push({name:t('post')+' '+(i+1),text:el.value});});
+    sources.push({name:t('chart'),text:$('mnq-chart').value});
+    sources=sources.filter(function(s){return s.text.trim();});
+    if(!sources.length){$('mnq-status').textContent=t('empty');return;}
+    var prepared;
+    try{prepared=sources.map(function(s){return {name:s.name,parts:chunks(s.text)};});}
+    catch(error){$('mnq-status').textContent=error.message;return;}
+    prepared.forEach(function(s){
+      var card=document.createElement('div'),heading=document.createElement('h2');card.className='card';heading.textContent=s.name;card.append(heading);
+      s.parts.forEach(function(part,i){
+        var label=document.createElement('label'),output=document.createElement('textarea'),button=document.createElement('button'),note=document.createElement('span');
+        output.id='mnq-out-'+$('mnq-outputs').childElementCount+'-'+i;
+        label.htmlFor=output.id;label.textContent=t('part')+' '+(i+1)+' / '+s.parts.length;
+        // Body is exact source; framing is explicitly separate.
+        output.value='MNQ · '+(i+1)+'/'+s.parts.length+'\n'+part+'\n\n'+t('caution');
+        output.readOnly=true;output.rows=7;output.dataset.source=part;
+        button.type='button';button.className='btn ghost';button.textContent=t('copy');note.setAttribute('role','status');
+        button.onclick=async function(){
+          try{await navigator.clipboard.writeText(output.value);note.textContent=t('copied');}
+          catch(error){output.focus();output.select();note.textContent=t('failed');}
+        };
+        card.append(label,output,button,note);
+      });
+      $('mnq-outputs').append(card);
+    });
+    $('mnq-status').textContent=t('done');
+  };
+  addPost();translate();$('mnq-status').textContent='';
+})();
 </script>
   </body>
 </html>
