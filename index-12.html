@@ -1,0 +1,2142 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>One-Minute Answer Page</title>
+    <style>
+      :root{
+        --bg:#faf6ef;
+        --surface:#ffffff;
+        --surface2:#f3ead9;
+        --ink:#2b2118;
+        --muted:#6f6151;
+        --line:#e2d5bf;
+        --accent:#b34a12;
+        --accent-strong:#96400e;
+        --accent-soft:#fbe9d9;
+        --good:#1e7a3c;
+        --good-soft:#e2f2e6;
+        --warn:#9a6a00;
+        --warn-soft:#fdf0cd;
+        --missing:#a33b12;
+        --missing-soft:#fdeee4;
+        --shadow:0 2px 10px rgba(80,50,10,.08);
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#171310;
+          --surface:#241d17;
+          --surface2:#2e251c;
+          --ink:#f3ead9;
+          --muted:#b8a88f;
+          --line:#453829;
+          --accent:#e07f3e;
+          --accent-strong:#eda266;
+          --accent-soft:#3a2716;
+          --good:#6fce8b;
+          --good-soft:#1d3324;
+          --warn:#eec25e;
+          --warn-soft:#38300f;
+          --missing:#f09a6d;
+          --missing-soft:#3a2417;
+          --shadow:0 2px 10px rgba(0,0,0,.35);
+        }
+      }
+      *{box-sizing:border-box;}
+      html{-webkit-text-size-adjust:100%;}
+      body{
+        margin:0;background:var(--bg);color:var(--ink);
+        font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+        font-size:18px;line-height:1.5;
+      }
+      .wrap{max-width:660px;margin:0 auto;padding:16px 16px 64px;}
+      h1{font-size:1.9rem;line-height:1.15;margin:.2em 0 .35em;font-weight:800;letter-spacing:-.01em;}
+      h2{font-size:1.35rem;line-height:1.25;margin:1.4em 0 .5em;font-weight:800;}
+      h3{font-size:1.12rem;margin:1.1em 0 .4em;font-weight:700;}
+      p{margin:.5em 0;}
+      .muted{color:var(--muted);}
+      .small{font-size:.92rem;}
+      .big{font-size:1.15rem;}
+
+      /* language bar */
+      .langbar{display:flex;gap:10px;align-items:center;margin:6px 0 18px;}
+      .langbar .spacer{flex:1;}
+      .langbtn{
+        flex:1;padding:16px 10px;font-size:1.15rem;font-weight:800;border-radius:12px;
+        border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-height:60px;
+      }
+      .langbtn.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong);}
+      .langbtn.esbtn{flex:1.35;font-size:1.3rem;}
+
+      .btn{
+        display:block;width:100%;padding:17px 18px;margin:12px 0;font-size:1.15rem;font-weight:700;
+        border-radius:12px;border:2px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;
+        text-align:center;text-decoration:none;min-height:60px;
+      }
+      .btn:active{background:var(--accent-strong);}
+      .btn.ghost{background:var(--surface);color:var(--accent-strong);}
+      .btn.plain{background:var(--surface);color:var(--ink);border-color:var(--line);}
+      .btn.smallbtn{width:auto;display:inline-block;padding:12px 18px;font-size:1rem;min-height:52px;margin:6px 6px 6px 0;}
+      .btnrow{display:flex;flex-wrap:wrap;gap:4px;}
+
+      textarea,input[type=text],input[type=tel]{
+        width:100%;padding:15px;font-size:1.1rem;border-radius:12px;border:2px solid var(--line);
+        background:var(--surface);color:var(--ink);font-family:inherit;
+      }
+      textarea{min-height:110px;resize:vertical;}
+      textarea:focus,input:focus{outline:3px solid var(--accent-soft);border-color:var(--accent);}
+
+      .micwrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin:18px 0 6px;}
+      .mic{
+        width:96px;height:96px;border-radius:50%;border:none;cursor:pointer;background:var(--accent);
+        color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);
+      }
+      .mic svg{width:44px;height:44px;fill:#fff;}
+      .mic.listening{background:#c22f1d;animation:pulse 1.1s infinite;}
+      @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.07);}100%{transform:scale(1);}}
+      @media (prefers-reduced-motion: reduce){.mic.listening{animation:none;}}
+      .micnote{min-height:1.4em;}
+
+      .card{
+        background:var(--surface);border:1.5px solid var(--line);border-radius:16px;
+        padding:18px;margin:14px 0;box-shadow:var(--shadow);
+      }
+      .sampletag{
+        display:inline-block;background:var(--warn-soft);color:var(--warn);font-weight:800;font-size:.8rem;
+        letter-spacing:.06em;padding:4px 10px;border-radius:999px;text-transform:uppercase;
+      }
+      .samplecard{cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit;}
+      .samplecard:active{border-color:var(--accent);}
+      .samplecard .sname{font-size:1.25rem;font-weight:800;margin:6px 0 2px;}
+      .samplecard .sline{color:var(--muted);}
+
+      .honest{
+        background:var(--surface2);border-radius:12px;padding:13px 15px;font-size:.98rem;margin:16px 0;
+      }
+
+      /* result: the public page preview */
+      .bizpage{
+        background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:22px 20px;margin:14px 0;
+        box-shadow:var(--shadow);
+      }
+      .bizpage .bname{font-size:1.7rem;font-weight:800;line-height:1.15;margin:0 0 4px;}
+      .bizpage .btrade{font-size:1.15rem;color:var(--accent-strong);font-weight:700;margin:0 0 12px;}
+      .factrow{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);}
+      .factrow .flabel{flex:0 0 108px;font-weight:700;color:var(--muted);font-size:.95rem;padding-top:2px;}
+      .factrow .fval{flex:1;}
+      .contactrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+      .contactrow a{
+        flex:1;min-width:140px;text-align:center;padding:15px 10px;border-radius:12px;font-weight:800;
+        text-decoration:none;font-size:1.05rem;min-height:56px;
+      }
+      .contactrow a.call{background:var(--good);color:#fff;}
+      .contactrow a.wa{background:#1faa55;color:#fff;}
+      .missingbanner{
+        background:var(--missing-soft);color:var(--missing);border-radius:12px;padding:12px 14px;
+        font-weight:600;margin:12px 0;font-size:1rem;
+      }
+
+      /* questions */
+      .qitem{border-top:1px solid var(--line);padding:14px 0;}
+      .qitem:first-of-type{border-top:none;}
+      .qitem .qq{font-weight:800;font-size:1.08rem;}
+      .qitem .qa{margin-top:4px;}
+      .qitem.miss .qa{color:var(--missing);font-weight:600;}
+      .quickadd{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+      .quickadd input{flex:1;min-width:170px;padding:12px;font-size:1.05rem;}
+      .quickadd button{
+        padding:12px 18px;font-size:1.05rem;font-weight:700;border-radius:12px;cursor:pointer;min-height:52px;
+        border:2px solid var(--accent);background:var(--accent);color:#fff;
+      }
+
+      .postbox{
+        background:var(--surface2);border-radius:14px;padding:16px;white-space:pre-wrap;
+        font-size:1.08rem;margin:10px 0;word-break:break-word;
+      }
+      .copied{color:var(--good);font-weight:800;}
+
+      .checkitem{border-top:1px solid var(--line);padding:14px 0;}
+      .checkitem:first-of-type{border-top:none;}
+      .checkitem .askline{font-weight:700;font-size:1.08rem;}
+      .toggle2{display:flex;gap:10px;margin-top:10px;}
+      .toggle2 button{
+        flex:1;padding:14px 8px;font-size:1.05rem;font-weight:700;border-radius:12px;cursor:pointer;min-height:56px;
+        border:2px solid var(--line);background:var(--surface);color:var(--ink);
+      }
+      .toggle2 button.yes.on{border-color:var(--good);background:var(--good-soft);color:var(--good);}
+      .toggle2 button.no.on{border-color:var(--missing);background:var(--missing-soft);color:var(--missing);}
+      .addline{
+        background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin-top:10px;font-weight:600;
+      }
+      .steps{margin:.4em 0 .4em 1.1em;padding:0;}
+      .steps li{margin:.35em 0;}
+      .backlink{
+        background:none;border:none;color:var(--accent-strong);font-size:1.05rem;font-weight:700;
+        cursor:pointer;padding:10px 0;min-height:48px;
+      }
+      .divider{border:none;border-top:2px solid var(--line);margin:26px 0;}
+
+      /* two big output choices */
+      .outrow{display:flex;gap:10px;margin:16px 0 4px;}
+      .outrow .btn{flex:1;margin:0;}
+
+      /* photo + link inputs */
+      .addrow{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 2px;}
+      .addrow .btn{flex:1;min-width:130px;margin:0;}
+      .photothumb{margin:12px 0;}
+      .photothumb img{width:100%;max-height:340px;object-fit:cover;border-radius:14px;display:block;}
+      .bizphoto{width:100%;max-height:300px;object-fit:cover;border-radius:12px;margin:0 0 14px;display:block;}
+      .postphoto{width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin:10px 0;display:block;}
+
+      /* video */
+      .videoframe{max-width:340px;margin:14px auto;}
+      .videoframe canvas{width:100%;height:auto;border-radius:18px;display:block;background:var(--surface2);box-shadow:var(--shadow);}
+      .videoframe video{width:100%;height:auto;border-radius:18px;display:block;background:#000;box-shadow:var(--shadow);}
+      .cfrow{margin:12px 0;}
+      .cfrow label{display:block;font-weight:700;margin-bottom:6px;}
+      .essentialtag{background:var(--missing-soft);color:var(--missing);font-size:.78rem;font-weight:800;padding:3px 8px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;}
+      .toggle2 button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong);}
+      .diffrow{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;}
+      .difflabel{font-weight:800;}
+      .diffold{color:var(--missing);text-decoration:line-through;}
+      .diffnew{background:var(--good-soft);color:var(--good);font-weight:800;padding:2px 8px;border-radius:8px;}
+      .textlinks{margin-top:10px;}
+      .textlinks a{color:var(--accent-strong);font-weight:700;}
+      .outrow{flex-wrap:wrap;}
+      .outrow .btn{flex:1 1 160px;}
+      .postta{min-height:150px;}
+      [hidden]{display:none !important;}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+
+      <div class="langbar" role="group" aria-label="Language / Idioma">
+        <button class="langbtn esbtn" id="lang-es" type="button">Español</button>
+        <button class="langbtn" id="lang-en" type="button">English</button>
+      </div>
+
+      <nav class="toggle2" aria-label="Mode / Modo" style="margin-bottom:20px">
+        <button id="mode-shop" type="button" aria-pressed="true">Negocio local / Local shop</button>
+        <button id="mode-mnq" type="button" aria-pressed="false">MNQ · X posts</button>
+      </nav>
+      <section id="scr-mnq" hidden>
+        <h1 data-mnq="title"></h1>
+        <p data-mnq="intro"></p>
+        <p class="honest" data-mnq="honest"></p>
+        <form id="mnq-form">
+          <label for="mnq-snapshot" data-mnq="snapshot"></label>
+          <textarea id="mnq-snapshot" rows="5" spellcheck="false"></textarea>
+          <p class="small muted" data-mnq="structure"></p>
+          <div id="mnq-inputs"></div>
+          <button class="btn ghost" id="mnq-add" type="button" data-mnq="add"></button>
+          <label for="mnq-chart" data-mnq="chart"></label>
+          <textarea id="mnq-chart" spellcheck="false"></textarea>
+          <button class="btn" type="submit" data-mnq="make"></button>
+        </form>
+        <p id="mnq-status" role="status" aria-live="polite"></p>
+        <div id="mnq-outputs"></div>
+      </section>
+
+      <!-- ===================== HOME ===================== -->
+      <section id="scr-home">
+
+        <h1 data-i18n="h1">Tu negocio, en una página, en un minuto</h1>
+        <p class="big" data-i18n="intro">Di lo que haces — hablando o escribiendo — y recibes tres cosas: una página con tus datos, las respuestas a las preguntas que hacen los clientes, y un mensaje listo para enviar.</p>
+
+        <div class="micwrap">
+          <button class="mic" id="mic-main" type="button" aria-label="Hablar / Talk">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.5 7.44V21h2v-2.06A7.5 7.5 0 0 0 19.5 11.5H18z"/></svg>
+          </button>
+          <div class="micnote muted small" id="mic-note" data-i18n="michint">Toca el micrófono y di lo que haces</div>
+        </div>
+
+        <label class="big" for="saybox" style="font-weight:700;" data-i18n="saylabel">O escríbelo aquí:</label>
+        <textarea id="saybox" data-i18n-ph="sayph" placeholder="Ejemplo: Corto cabello en Houston. Martes a sábado. $25. Sin cita. Mujeres y niños."></textarea>
+        <p class="muted small" data-i18n="sayhelp">Una sola frase está bien: qué haces, en qué ciudad, qué días y horas, cuánto cobras, si es sin cita o con cita, y tu teléfono si quieres que aparezca.</p>
+
+        <div class="addrow">
+          <button class="btn ghost" id="photo-btn" type="button" data-i18n="photobtn">Foto</button>
+          <button class="btn ghost" id="link-btn" type="button" data-i18n="linkbtn">Enlace</button>
+          <button class="btn ghost" id="ownvideo-btn" type="button" data-i18n="videobtn">Video</button>
+        </div>
+        <input type="file" id="photo-in" accept="image/*" hidden />
+        <div id="photo-preview"></div>
+        <input type="file" id="ownvideo-in" accept="video/*" hidden />
+        <div id="ownvideo-preview"></div>
+        <div id="link-wrap" hidden>
+          <input type="text" id="link-in" data-i18n-ph="linkph" placeholder="Pega tu enlace de Facebook, Instagram o Google" inputmode="url" autocomplete="off" />
+          <p class="muted small" data-i18n="linknote">Solo ponemos el enlace como botón en tu página. No lo abrimos ni copiamos nada de él.</p>
+        </div>
+
+        <button class="btn" id="go-make" type="button" data-i18n="makebtn">Crear mi página</button>
+
+        <div class="honest" data-i18n="honest">Honestidad primero: recibes la página, las respuestas y los mensajes, hechos solo con tus palabras. Ninguna aplicación promete que un buscador o una IA te va a mostrar — eso lo decide cada plataforma. Lo que sí tienes es algo verdadero y listo para compartir.</div>
+
+        <hr class="divider" />
+        <h2 data-i18n="samplesh">Mira un ejemplo primero</h2>
+        <p class="muted" data-i18n="samplesp">Toca un negocio de ejemplo y mira la página terminada en un toque.</p>
+        <div id="sample-list"></div>
+      </section>
+
+      <!-- ===================== CONFIRM ===================== -->
+      <section id="scr-confirm" hidden>
+        <button class="backlink" id="back-home2" type="button" data-i18n="backhome">← Empezar de nuevo</button>
+        <div id="sample-banner-c"></div>
+        <h1 data-i18n="confirmh">Confirma tus datos</h1>
+        <p data-i18n="confirmp">Esto es lo que entendimos de tus palabras. Corrige lo que esté mal y agrega lo que falta. Nada se crea hasta que toques «Confirmar y crear».</p>
+        <div class="card">
+          <p style="margin-top:0;"><strong data-i18n="tradeline">Qué hace</strong>: <span id="cf-trade"></span></p>
+          <div class="cfrow"><label for="cf-name"><span data-i18n="fName">Nombre del negocio</span> <span class="essentialtag" id="tag-name" data-i18n="essentialtag" hidden>Esencial — falta este dato</span></label><input type="text" id="cf-name" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-city" data-i18n="fCity">Ciudad</label><input type="text" id="cf-city" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-address"><span data-i18n="fAddress">Dirección</span> <span class="essentialtag" id="tag-address" data-i18n="essentialtag" hidden>Esencial — falta este dato</span></label><input type="text" id="cf-address" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-days" data-i18n="fDays">Días</label><input type="text" id="cf-days" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-hours" data-i18n="fHours">Horas</label><input type="text" id="cf-hours" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-price" data-i18n="fPrice">Precio</label><input type="text" id="cf-price" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-audience" data-i18n="fWho">Para quién</label><input type="text" id="cf-audience" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-mode" data-i18n="fMode">Citas</label><input type="text" id="cf-mode" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-services" data-i18n="fServices">Servicios</label><input type="text" id="cf-services" autocomplete="off"></div>
+          <div class="cfrow"><label for="cf-phone"><span data-i18n="fPhone">Teléfono</span> <span class="essentialtag" id="tag-phone" data-i18n="essentialtag" hidden>Esencial — falta este dato</span></label><input type="tel" id="cf-phone" autocomplete="off"></div>
+        </div>
+
+        <h3 data-i18n="fixh">¿Algo está mal?</h3>
+        <div class="micwrap">
+          <button class="mic" id="mic-cf" type="button" aria-label="Corregir hablando / Correct by voice">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.5 7.44V21h2v-2.06A7.5 7.5 0 0 0 19.5 11.5H18z"/></svg>
+          </button>
+        </div>
+        <textarea id="cf-fix" data-i18n-ph="fixph" placeholder="Escribe la corrección aquí…"></textarea>
+        <button class="btn ghost" id="go-cf-fix" type="button" data-i18n="fixapply">Aplicar la corrección</button>
+
+        <div class="card" id="confirm-contact" hidden>
+          <h3 style="margin-top:0;" data-i18n="primaryq">Tu contacto principal en la página</h3>
+          <div class="toggle2">
+            <button type="button" id="pc-call" data-i18n="call">Llamar</button>
+            <button type="button" id="pc-wa" data-i18n="wa">WhatsApp</button>
+          </div>
+          <h3 data-i18n="consentq">¿Mostramos tu número en tu página?</h3>
+          <p class="muted small" data-i18n="consentnote">Tu número es personal: solo aparece en tu página si tú dices que sí aquí.</p>
+          <div class="toggle2">
+            <button type="button" id="consent-yes" data-i18n="consentYes">Sí, muéstralo</button>
+            <button type="button" id="consent-no" data-i18n="consentNo">No lo muestres</button>
+          </div>
+        </div>
+
+        <button class="btn" id="go-confirm" type="button" data-i18n="confirmbtn">Confirmar y crear</button>
+      </section>
+
+      <!-- ===================== RESULT ===================== -->
+      <section id="scr-result" hidden>
+        <button class="backlink" id="back-home" type="button" data-i18n="backhome">← Empezar de nuevo</button>
+        <div id="sample-banner"></div>
+        <h1 data-i18n="resh">Esto es lo que tienes</h1>
+
+        <div class="outrow">
+          <button class="btn" id="btn-post-out" type="button" data-i18n="postout">Crear un post</button>
+          <button class="btn ghost" id="btn-video-out" type="button" data-i18n="videoout">Crear un video</button>
+          <button class="btn ghost" id="btn-page-out" type="button" data-i18n="pageout">Crear mi página</button>
+        </div>
+
+        <div id="post-block">
+          <hr class="divider" />
+          <h2 data-i18n="posth">Tu post — en español e inglés</h2>
+          <p class="muted" data-i18n="postp">Dos versiones del mismo post, hechas solo con tus datos. Puedes editar cada una antes de copiarla.</p>
+          <div id="post-photo"></div>
+          <h3 data-i18n="espost">Post en español</h3>
+          <textarea class="postta" id="post-es" aria-label="Post en español"></textarea>
+          <button class="btn" id="copy-post-es" type="button" data-i18n="copy">Copiar el mensaje</button>
+          <span class="copied" id="copy-note-es" hidden data-i18n="copied">¡Copiado!</span>
+          <h3 data-i18n="enpost">Post in English</h3>
+          <textarea class="postta" id="post-en" aria-label="Post in English"></textarea>
+          <button class="btn" id="copy-post-en" type="button" data-i18n="copy">Copiar el mensaje</button>
+          <span class="copied" id="copy-note-en" hidden data-i18n="copied">¡Copiado!</span>
+          <h3 data-i18n="shareh">Mensaje para compartir tu página</h3>
+          <p class="muted" data-i18n="sharep">Este mensaje invita a los clientes a ver tu página. Todavía no existe un enlace público real, así que el mensaje marca con [ENLACE] el lugar donde irá cuando la página se publique.</p>
+          <textarea class="postta" id="share-msg" aria-label="Mensaje para compartir"></textarea>
+          <button class="btn ghost" id="copy-share" type="button" data-i18n="copy">Copiar el mensaje</button>
+          <span class="copied" id="copy-note-share" hidden data-i18n="copied">¡Copiado!</span>
+        </div>
+
+        <div id="page-block">
+        <h2 data-i18n="pageh">Tu página — vista previa</h2>
+        <p class="muted small" data-i18n="pagep">Así se ve la página de tu negocio, hecha solo con lo que dijiste.</p>
+        <div id="bizpage"></div>
+        <div id="missing-banner"></div>
+        </div>
+
+        <button class="btn ghost" id="listen-btn" type="button" data-i18n="listen">🔊 Escuchar mi página y mi mensaje</button>
+        <p class="muted small" id="listen-note"></p>
+
+        <hr class="divider" />
+        <h2 data-i18n="qh">2 · Las preguntas de los clientes</h2>
+        <p class="muted" data-i18n="qp">Las diez preguntas que la gente hace de tu oficio, respondidas solo con tus datos. Si falta un dato, la respuesta lo dice — y puedes agregarlo ahí mismo.</p>
+        <div class="card" id="qlist" style="padding-top:6px;padding-bottom:6px;"></div>
+
+        <div id="video-block">
+          <hr class="divider" />
+          <h2 data-i18n="videoh">Tu video</h2>
+          <p class="muted" data-i18n="videop">El mismo contenido de tu página, como un video vertical corto con tus datos exactos — sin nada inventado. Toca «Crear el video para descargar» y al terminar tú eliges: descargarlo a tu teléfono o compartirlo.</p>
+          <div class="videoframe"><canvas id="vcanvas" width="720" height="1280"></canvas><video id="vfile" controls playsinline hidden></video></div>
+          <div class="btnrow">
+            <button class="btn smallbtn" id="vrec" type="button" data-i18n="vrec">Crear el video para descargar</button>
+            <button class="btn smallbtn ghost" id="vplay" type="button" data-i18n="vplay">Ver el video</button>
+            <a class="btn smallbtn" id="vdl" href="#" download="mi-negocio.webm" hidden data-i18n="vdl">Descargar el video</a>
+            <button class="btn smallbtn" id="vshare" type="button" hidden data-i18n="vshare">Compartir o guardar el video</button>
+          </div>
+          <p class="muted small" id="vnote"></p>
+        </div>
+
+        <hr class="divider" />
+        <h2 data-i18n="fixh">¿Algo está mal?</h2>
+        <p class="muted" data-i18n="fixp">Di o escribe la corrección y todo se rehace: «En realidad abro a las 8» o «El precio es $30».</p>
+        <div class="micwrap">
+          <button class="mic" id="mic-fix" type="button" aria-label="Corregir hablando / Correct by voice">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.5 7.44V21h2v-2.06A7.5 7.5 0 0 0 19.5 11.5H18z"/></svg>
+          </button>
+        </div>
+        <textarea id="fixbox" data-i18n-ph="fixph" placeholder="Escribe la corrección aquí…"></textarea>
+        <button class="btn" id="go-fix" type="button" data-i18n="fixbtn">Corregir y rehacer todo</button>
+
+        <hr class="divider" />
+        <h2 data-i18n="changedh">¿Qué cambió esta semana?</h2>
+        <p class="muted" data-i18n="changedp">Di o escribe el cambio — por ejemplo, «El precio es $30». Primero revisas el cambio; al aplicarlo, todo se rehace con el dato nuevo.</p>
+        <div class="micwrap">
+          <button class="mic" id="mic-change" type="button" aria-label="Decir el cambio / Say the change">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.5 7.44V21h2v-2.06A7.5 7.5 0 0 0 19.5 11.5H18z"/></svg>
+          </button>
+        </div>
+        <textarea id="changebox" data-i18n-ph="changedph" placeholder="Escribe el cambio aquí…"></textarea>
+        <button class="btn" id="go-change" type="button" data-i18n="reviewbtn">Revisar el cambio</button>
+        <div id="change-diff"></div>
+
+        <hr class="divider" />
+        <h2 data-i18n="moreh">Y además</h2>
+        <button class="btn plain" id="go-reconfirm" type="button" data-i18n="reviewfacts">Revisar o corregir mis datos</button>
+        <button class="btn plain" id="go-check" type="button" data-i18n="checkbtn">La revisión del mes — pregúntale a tu teléfono</button>
+        <button class="btn plain" id="go-week" type="button" data-i18n="weekbtn">El resto de la semana — 5 mensajes más</button>
+        <div id="makeown-wrap"></div>
+      </section>
+
+      <!-- ===================== CHECK ===================== -->
+      <section id="scr-check" hidden>
+        <button class="backlink" id="back-result1" type="button" data-i18n="backres">← Volver a mi página</button>
+        <h1 data-i18n="checkh">La revisión del mes</h1>
+        <p data-i18n="checkp1">Una vez al mes, hazle estas preguntas a tu propio teléfono, en voz alta, como lo haría un cliente.</p>
+        <ol class="steps">
+          <li data-i18n="checkstep1">Abre el asistente de tu teléfono (o ChatGPT) y pregunta cada frase.</li>
+          <li data-i18n="checkstep2">Si la respuesta nombra tu negocio, toca «Me mencionó».</li>
+          <li data-i18n="checkstep3">Si no, toca «No me mencionó» y te mostramos la línea exacta que puedes agregar a tu página.</li>
+        </ol>
+        <div class="honest" data-i18n="checkhonest">Esto es una revisión guiada que haces tú mismo — no es un rastreador automático y nadie te promete que el teléfono te va a mencionar. Sirve para descubrir qué dato le falta a tu página.</div>
+        <div class="card" id="checklist" style="padding-top:6px;padding-bottom:6px;"></div>
+        <div id="check-summary"></div>
+      </section>
+
+      <!-- ===================== WEEK ===================== -->
+      <section id="scr-week" hidden>
+        <button class="backlink" id="back-result2" type="button" data-i18n="backres2">← Volver a mi página</button>
+        <h1 data-i18n="weekh">El resto de la semana</h1>
+        <p data-i18n="weekp">Cinco mensajes cortos hechos de los mismos datos de tu página — uno para cada día. Copia el que quieras y pégalo donde publicas.</p>
+        <div id="weeklist"></div>
+      </section>
+
+    </div>
+
+<script>
+"use strict";
+/* ============================================================
+   One-Minute Answer Page — everything runs on this device, in
+   this session only. Nothing is stored or sent anywhere.
+   Facts come only from the owner's own words. Never invented.
+   ============================================================ */
+
+var lang = "es";                 // Spanish first, per product spec
+var facts = null;                // current structured facts
+var isSample = false;
+var currentSample = null;        // the SAMPLES entry behind the current facts, if any
+var checkState = {};             // check screen answers, session only
+
+/* ---------------- i18n ---------------- */
+var T = {
+  es: {
+    h1:"Tu negocio, en una página, en un minuto",
+    intro:"Di lo que haces — hablando o escribiendo — y recibes tres cosas: una página con tus datos, las respuestas a las preguntas que hacen los clientes, y un mensaje listo para enviar.",
+    michint:"Toca el micrófono y di lo que haces",
+    miclistening:"Escuchando… toca de nuevo para parar",
+    micnomic:"Este teléfono no puede escuchar aquí. Escribir funciona igual de bien.",
+    saylabel:"O escríbelo aquí:",
+    sayph:"Ejemplo: Corto cabello en Houston. Martes a sábado. $25. Sin cita. Mujeres y niños.",
+    sayhelp:"Una sola frase está bien: qué haces, en qué ciudad, qué días y horas, cuánto cobras, si es sin cita o con cita, y tu teléfono si quieres que aparezca.",
+    makebtn:"Revisar mis datos",
+    honest:"Honestidad primero: recibes la página, las respuestas y los mensajes, hechos solo con tus palabras. Ninguna aplicación promete que un buscador o una IA te va a mostrar — eso lo decide cada plataforma. Lo que sí tienes es algo verdadero y listo para compartir.",
+    samplesh:"Mira un ejemplo primero",
+    samplesp:"Toca un negocio de ejemplo y recorre el mismo camino completo: confirmar los datos y crear.",
+    sample:"EJEMPLO",
+    backhome:"← Empezar de nuevo",
+    resh:"Tus datos están confirmados",
+    pageh:"Tu página — vista previa",
+    pagep:"Así ve el cliente tu página en su teléfono: tus datos y un solo botón principal de contacto.",
+    listen:"🔊 Escuchar mi página y mi mensaje",
+    listennote:"Te lo leo en voz alta. Si algo suena mal, corrígelo abajo.",
+    qh:"Las preguntas de los clientes",
+    qp:"Las diez preguntas que la gente hace de tu oficio, respondidas solo con tus datos. Si falta un dato, la respuesta lo dice — y puedes agregarlo ahí mismo.",
+    posth:"Tu post — en español e inglés",
+    postp:"Dos versiones del mismo post, hechas solo con tus datos. Puedes editar cada una antes de copiarla y pegarla en WhatsApp, Instagram o Facebook.",
+    copy:"Copiar el mensaje",
+    copied:"¡Copiado!",
+    fixh:"¿Algo está mal?",
+    fixp:"Di o escribe la corrección y todo se rehace: «En realidad abro a las 8» o «El precio es $30».",
+    fixph:"Escribe la corrección aquí…",
+    fixbtn:"Corregir y rehacer todo",
+    moreh:"Y además",
+    checkbtn:"La revisión del mes — pregúntale a tu teléfono",
+    weekbtn:"El resto de la semana — 5 mensajes más",
+    makeown:"Hacer el mío con mis palabras",
+    samplebanner:"Esto es un negocio de EJEMPLO, con datos de ejemplo. Toca abajo para hacer el tuyo.",
+    fWhat:"Qué hace", fCity:"Ciudad", fDays:"Días", fHours:"Horas", fPrice:"Precio",
+    fWho:"Para quién", fMode:"Citas", fPhone:"Teléfono", fServices:"Servicios",
+    call:"Llamar", wa:"WhatsApp",
+    missingpre:"A tu página le faltan estos datos: ",
+    missingjoin:" · ",
+    missingpost:" Agrégalos en las preguntas de abajo y tu página queda completa.",
+    missline:"Falta este dato — agrégalo y la respuesta aparece:",
+    addbtn:"Agregar",
+    addph:{ city:"Ciudad o zona", days:"Ej.: martes a sábado", hours:"Ej.: 9 am a 7 pm", price:"Ej.: $25",
+            phone:"Número de teléfono", address:"Ej.: 123 Main St", mode:"¿Sin cita o con cita?", audience:"Ej.: mujeres y niños",
+            services:"Ej.: cortes, degradados, barba", name:"Nombre del negocio" },
+    checkh:"La revisión del mes",
+    checkp1:"Una vez al mes, hazle estas preguntas a tu propio teléfono, en voz alta, como lo haría un cliente.",
+    checkstep1:"Abre el asistente de tu teléfono (o ChatGPT) y pregunta cada frase.",
+    checkstep2:"Si la respuesta nombra tu negocio, toca «Me mencionó».",
+    checkstep3:"Si no, toca «No me mencionó» y te mostramos la línea exacta que puedes agregar a tu página.",
+    checkhonest:"Esto es una revisión guiada que haces tú mismo — no es un rastreador automático y nadie te promete que el teléfono te va a mencionar. Sirve para descubrir qué dato le falta a tu página.",
+    askphone:"Pregúntale a tu teléfono:",
+    yes:"Me mencionó", no:"No me mencionó",
+    addthisline:"Agrega esta línea a tu página:",
+    firstadd:"Primero agrega este dato en tu página (sección de preguntas) y vuelve a revisar.",
+    copyshort:"Copiar la línea",
+    summarynone:"Cuando marques cada pregunta, aquí verás el resumen.",
+    summaryall:"Marcaste todas como «Me mencionó». Bien — repite la revisión el mes que viene, porque las respuestas de los teléfonos cambian.",
+    summarysome1:"Tu teléfono te mencionó en ", summarysome2:" de ", summarysome3:" preguntas. Las líneas de arriba son lo que puedes agregar a tu página para que tenga la información completa. Agregar la línea no garantiza que el teléfono te mencione — le da la información verdadera para poder hacerlo.",
+    backres:"← Volver a mi página", backres2:"← Volver a mi página",
+    weekh:"El resto de la semana",
+    weekp:"Cinco mensajes cortos hechos de los mismos datos de tu página — uno para cada día. Copia el que quieras y pégalo donde publicas.",
+    daynames:["Día 1","Día 2","Día 3","Día 4","Día 5"],
+    needwords:"Primero crea tu página para usar esta parte.",
+    unnamed:"Mi negocio",
+    speakpage:"Esto dice tu página. ",
+    speakpost:"Y este es tu mensaje listo. ",
+    photobtn:"Foto", linkbtn:"Enlace",
+    photonote:"Tu foto se queda en este teléfono. No se sube a ningún lado.",
+    linkph:"Pega tu enlace de Facebook, Instagram o Google",
+    linknote:"Solo ponemos el enlace como botón en tu página. No lo abrimos ni copiamos nada de él.",
+    removephoto:"Quitar la foto",
+    postphoto:"Tu foto — lista para publicarla junto con el mensaje.",
+    seemore:"Ver más",
+    postout:"Crear un post", videoout:"Crear un video",
+    videoh:"Tu video",
+    videop:"El mismo contenido de tu página, como un video vertical corto con tus datos exactos — sin nada inventado. Toca «Crear el video para descargar» y al terminar tú eliges: descargarlo a tu teléfono o compartirlo.",
+    vplay:"Ver el video", vrec:"Crear el video para descargar", vdl:"Descargar el video",
+    vshare:"Compartir o guardar el video",
+    vOpen:"Abierto",
+    vrecording:"Creando tu video… mira la pantalla — tarda lo que dura el video.",
+    vready:"Tu video está listo. Elige «Descargar el video» para guardarlo en tu teléfono, o «Compartir o guardar» para enviarlo por WhatsApp o guardarlo desde ahí. En el video de arriba, los tres puntos (⋯) también dan la opción de descargar.",
+    vnosupport:"Este teléfono puede mostrar el video aquí, pero no puede crear el archivo. Puedes grabar la pantalla mientras se reproduce.",
+    fName:"Nombre del negocio", fAddress:"Dirección", videobtn:"Video", pageout:"Crear mi página",
+    ownvideonote:"Tu video se queda en este teléfono. No se sube a ningún lado.",
+    ownvideo:"Tu video",
+    attachedpage:"Adjunto a tu página: el cliente lo ve junto a tus datos.",
+    confirmh:"Confirma tus datos",
+    confirmp:"Esto es lo que entendimos de tus palabras. Corrige lo que esté mal y agrega lo que falta. Nada se crea hasta que toques «Confirmar y crear».",
+    essentialtag:"Esencial — falta este dato",
+    confirmbtn:"Confirmar y crear",
+    fixapply:"Aplicar la corrección",
+    tradeline:"Qué hace",
+    primaryq:"Tu contacto principal en la página",
+    consentq:"¿Mostramos tu número en tu página?",
+    consentnote:"Tu número es personal: solo aparece en tu página si tú dices que sí aquí. Sin tu permiso, la página invita a contactar al negocio sin mostrar el número.",
+    consentYes:"Sí, muéstralo",
+    consentNo:"No lo muestres",
+    contactline:"Contacta al negocio para pedir una cita.",
+    tapnote:"Tocar «Llamar» o «WhatsApp» solo inicia el contacto: no confirma una cita ni significa una venta. La cita queda confirmada solo cuando el negocio responde.",
+    espost:"Post en español",
+    enpost:"Post in English",
+    shareh:"Mensaje para compartir tu página",
+    sharep:"Este mensaje invita a los clientes a ver tu página. Todavía no existe un enlace público real, así que el mensaje marca con [ENLACE] el lugar donde irá cuando la página se publique — nunca presentamos un enlace falso como si fuera real.",
+    changedh:"¿Qué cambió esta semana?",
+    changedp:"Di o escribe el cambio — por ejemplo, «El precio es $30». Primero revisas el cambio; al aplicarlo, el post, el video, la página, las respuestas y los mensajes de la semana se rehacen con el dato nuevo. No tienes que empezar de cero.",
+    changedph:"Escribe el cambio aquí…",
+    reviewbtn:"Revisar el cambio",
+    applybtn:"Aplicar y rehacer todo",
+    cancelbtn:"Cancelar",
+    nochanges:"No detectamos ningún cambio en tus datos. Di el dato nuevo, por ejemplo: «El precio es $30».",
+    changedone:"Listo: todo se rehizo con tus datos nuevos.",
+    reviewfacts:"Revisar o corregir mis datos"
+  },
+  en: {
+    h1:"Your business, on one page, in one minute",
+    intro:"Say what you do — by talking or typing — and you get three things: a page with your facts, the answers to the questions customers ask, and one post ready to send.",
+    michint:"Tap the microphone and say what you do",
+    miclistening:"Listening… tap again to stop",
+    micnomic:"This phone can't listen here. Typing works just as well.",
+    saylabel:"Or type it here:",
+    sayph:"Example: I cut hair in Houston. Tuesday to Saturday. $25. Walk-ins. Women and kids.",
+    sayhelp:"One breath is enough: what you do, which city, which days and hours, what you charge, walk-ins or appointments, and your phone if you want it shown.",
+    makebtn:"Review my facts",
+    honest:"Honest first: you get the page, the answers, and the posts, made only from your own words. No app can promise a search engine or an AI will show them — each platform decides that. What you do have is something true, ready to share.",
+    samplesh:"See a sample first",
+    samplesp:"Tap a sample business and walk the same full journey: confirm the facts, then create.",
+    sample:"SAMPLE",
+    backhome:"← Start over",
+    resh:"Your facts are confirmed",
+    pageh:"Your business page — preview",
+    pagep:"This is how a customer sees your page on their phone: your facts and one main contact button.",
+    listen:"🔊 Listen to my page and my post",
+    listennote:"I'll read it back out loud. If anything sounds wrong, fix it below.",
+    qh:"The questions customers ask",
+    qp:"The ten questions people ask about your trade, answered only from your facts. If a fact is missing, the answer says so — and you can add it right there.",
+    posth:"Your post — in Spanish and English",
+    postp:"Two versions of the same post, made only from your facts. You can edit each one before copying it into WhatsApp, Instagram, or Facebook.",
+    copy:"Copy the post",
+    copied:"Copied!",
+    fixh:"Something wrong?",
+    fixp:"Say or type the correction and everything is rebuilt: “Actually I open at 8” or “The price is $30.”",
+    fixph:"Type the correction here…",
+    fixbtn:"Fix it and rebuild everything",
+    moreh:"And also",
+    checkbtn:"The monthly check — ask your phone",
+    weekbtn:"The rest of the week — 5 more posts",
+    makeown:"Make my own with my words",
+    samplebanner:"This is a SAMPLE business with sample facts. Tap below to make your own.",
+    fWhat:"What they do", fCity:"City", fDays:"Days", fHours:"Hours", fPrice:"Price",
+    fWho:"Who it's for", fMode:"Visits", fPhone:"Phone", fServices:"Services",
+    call:"Call", wa:"WhatsApp",
+    missingpre:"Your page is missing these facts: ",
+    missingjoin:" · ",
+    missingpost:" Add them in the questions below and your page is complete.",
+    missline:"Missing line — add this fact and the answer appears:",
+    addbtn:"Add",
+    addph:{ city:"City or area", days:"E.g.: Tuesday to Saturday", hours:"E.g.: 9 am to 7 pm", price:"E.g.: $25",
+            phone:"Phone number", address:"E.g.: 123 Main St", mode:"Walk-ins or appointments?", audience:"E.g.: women and kids",
+            services:"E.g.: cuts, fades, beard trims", name:"Business name" },
+    checkh:"The monthly check",
+    checkp1:"Once a month, ask your own phone these questions out loud, the way a customer would.",
+    checkstep1:"Open your phone's assistant (or ChatGPT) and ask each phrase.",
+    checkstep2:"If the answer names your business, tap “Mentioned me.”",
+    checkstep3:"If not, tap “Not mentioned” and we'll show you the exact line you can add to your page.",
+    checkhonest:"This is a guided self-check you do yourself — it is not an automatic tracker, and nobody can promise your phone will mention you. It shows you which fact your page is missing.",
+    askphone:"Ask your phone:",
+    yes:"Mentioned me", no:"Not mentioned",
+    addthisline:"Add this line to your page:",
+    firstadd:"First add this fact on your page (questions section), then check again.",
+    copyshort:"Copy the line",
+    summarynone:"When you've marked each question, your summary appears here.",
+    summaryall:"You marked every question “Mentioned me.” Good — repeat the check next month, because phone answers change.",
+    summarysome1:"Your phone mentioned you in ", summarysome2:" of ", summarysome3:" questions. The lines above are what you can add so your page carries the complete information. Adding a line does not guarantee the phone will mention you — it gives it the true information it needs to be able to.",
+    backres:"← Back to my page", backres2:"← Back to my page",
+    weekh:"The rest of the week",
+    weekp:"Five short posts made from the same facts as your page — one for each day. Copy the one you want and paste it where you post.",
+    daynames:["Day 1","Day 2","Day 3","Day 4","Day 5"],
+    needwords:"Make your page first to use this part.",
+    unnamed:"My business",
+    speakpage:"Here is what your page says. ",
+    speakpost:"And here is your ready post. ",
+    photobtn:"Photo", linkbtn:"Link",
+    photonote:"Your photo stays on this phone. It is never uploaded anywhere.",
+    linkph:"Paste your Facebook, Instagram, or Google link",
+    linknote:"We only put the link on your page as a button. We don't open it or copy anything from it.",
+    removephoto:"Remove photo",
+    postphoto:"Your photo — ready to post together with the message.",
+    seemore:"See more",
+    postout:"Create a post", videoout:"Create a video",
+    videoh:"Your video",
+    videop:"The same content as your page, as a short vertical video with your exact facts — nothing invented. Tap “Create the video to download” and when it finishes you choose: download it to your phone or share it.",
+    vplay:"Play the video", vrec:"Create the video to download", vdl:"Download the video",
+    vshare:"Share or save the video",
+    vOpen:"Open",
+    vrecording:"Creating your video… watch the screen — it takes as long as the video lasts.",
+    vready:"Your video is ready. Choose “Download the video” to save it to your phone, or “Share or save” to send it on WhatsApp or save it from there. In the video above, the three dots (⋯) also give a download option.",
+    vnosupport:"This phone can play the video here but can't create the file. You can screen-record it while it plays.",
+    fName:"Business name", fAddress:"Address", videobtn:"Video", pageout:"Create my business page",
+    ownvideonote:"Your video stays on this phone. It is never uploaded anywhere.",
+    ownvideo:"Your video",
+    attachedpage:"Attached to your page: customers see it next to your facts.",
+    confirmh:"Confirm your facts",
+    confirmp:"This is what we understood from your words. Fix anything that is wrong and add what is missing. Nothing is created until you tap “Confirm and create.”",
+    essentialtag:"Essential — this fact is missing",
+    confirmbtn:"Confirm and create",
+    fixapply:"Apply the correction",
+    tradeline:"What they do",
+    primaryq:"Your main contact on the page",
+    consentq:"Show your number on your page?",
+    consentnote:"Your number is personal: it appears on your page only if you say yes here. Without your permission, the page invites people to contact the business without showing the number.",
+    consentYes:"Yes, show it",
+    consentNo:"Don't show it",
+    contactline:"Contact the business to request an appointment.",
+    tapnote:"Tapping “Call” or “WhatsApp” only starts the contact: it does not confirm an appointment and it is not a sale. An appointment is confirmed only when the business replies.",
+    espost:"Post in Spanish",
+    enpost:"Post in English",
+    shareh:"A message to share your page",
+    sharep:"This message invites customers to see your page. There is no real public link yet, so the message marks with [LINK] the place where it will go once the page is published — we never present a fake link as real.",
+    changedh:"What changed this week?",
+    changedp:"Say or type the change — for example, “The price is $30.” You review the change first; when you apply it, the post, the video, the page, the answers, and the week's posts are all rebuilt with the new fact. You never start over.",
+    changedph:"Type the change here…",
+    reviewbtn:"Review the change",
+    applybtn:"Apply and rebuild everything",
+    cancelbtn:"Cancel",
+    nochanges:"We didn't detect any change to your facts. Say the new fact, for example: “The price is $30.”",
+    changedone:"Done: everything was rebuilt with your new facts.",
+    reviewfacts:"Review or correct my facts"
+  }
+};
+
+/* Trade words used in generated sentences */
+var TRADES = {
+  barber:  { en:{do:"Haircuts and barber services", verb:"cuts hair", noun:"barber", q:"Who cuts hair near me?"}, es:{do:"Cortes de cabello y barbería", verb:"corta cabello", noun:"barbero", q:"¿Quién corta cabello cerca de mí?"} },
+  cleaner: { en:{do:"House cleaning", verb:"cleans houses", noun:"house cleaner", q:"Who cleans houses near me?"}, es:{do:"Limpieza de casas", verb:"limpia casas", noun:"servicio de limpieza", q:"¿Quién limpia casas cerca de mí?"} },
+  food:    { en:{do:"Lunch and home-style food", verb:"serves lunch", noun:"lunch spot", q:"Where is a good lunch near me?"}, es:{do:"Comida casera y almuerzos", verb:"sirve almuerzos", noun:"lugar de almuerzos", q:"¿Dónde hay un buen almuerzo cerca de mí?"} },
+  plumber: { en:{do:"Plumbing repairs", verb:"fixes plumbing", noun:"plumber", q:"Who is a plumber near me?"}, es:{do:"Reparaciones de plomería", verb:"arregla plomería", noun:"plomero", q:"¿Quién es plomero cerca de mí?"} },
+  tutor:   { en:{do:"Tutoring and homework help", verb:"tutors students", noun:"tutor", q:"Who tutors kids near me?"}, es:{do:"Tutorías y ayuda con tareas", verb:"da tutorías", noun:"tutor", q:"¿Quién da tutorías cerca de mí?"} },
+  realtor: { en:{do:"Homes for sale and rent", verb:"helps buy and sell homes", noun:"realtor", q:"Who is a realtor near me?"}, es:{do:"Venta y renta de casas", verb:"ayuda a comprar y vender casas", noun:"agente de bienes raíces", q:"¿Quién vende casas cerca de mí?"} },
+  general: { en:{do:"Local services", verb:"helps customers", noun:"local business", q:"Who does this near me?"}, es:{do:"Servicios locales", verb:"atiende clientes", noun:"negocio local", q:"¿Quién hace esto cerca de mí?"} }
+};
+
+/* ---------------- samples (always labeled) ---------------- */
+var SAMPLES = [
+  {
+    id:"barber",
+    words:{
+      en:"Miguel's Cuts offers haircuts in Houston, Tuesday through Saturday, 9 AM to 7 PM. Haircuts cost $25. Walk-ins welcome. Men, women, and children.",
+      es:"Miguel's Cuts ofrece cortes de cabello en Houston, martes a sábado, de 9 AM a 7 PM. Los cortes cuestan $25. Sin cita. Hombres, mujeres y niños."
+    },
+    facts:{ trade:"barber", name:"Miguel's Cuts", city:"Houston", address:"", days:"", daysSpec:{kind:"range",from:1,to:5}, hours:"9 AM – 7 PM", price:"$25", priceFrom:false, audience:"", audCodes:["men","women","kids"], mode:"", modeCode:"walkin", phone:"", services:{ en:"Haircuts", es:"Cortes de cabello" } }
+  },
+  {
+    id:"cleaner",
+    words:{
+      en:"I clean houses in Palm Bay. Monday to Friday, 8 to 4. From $99 a visit. Homes and apartments. By appointment — call or WhatsApp. My business is Casa Limpia by Rosa.",
+      es:"Limpio casas en Palm Bay. Lunes a viernes, de 8 a 4. Desde $99 por visita. Casas y apartamentos. Con cita — llama o escribe por WhatsApp. Mi negocio es Casa Limpia by Rosa."
+    },
+    facts:{ trade:"cleaner", name:"Casa Limpia by Rosa", city:"Palm Bay", address:"", days:"", daysSpec:{kind:"range",from:0,to:4}, hours:"8 AM – 4 PM", price:"$99", priceFrom:true, audience:"", audCodes:["houses","apartments"], mode:"", modeCode:"appt", phone:"(555) 014-8820", services:{ en:"Regular cleaning, deep cleaning, move-in and move-out cleaning", es:"Limpieza regular, limpieza profunda, limpieza de mudanzas" } }
+  },
+  {
+    id:"food",
+    words:{
+      en:"We serve lunch in Sebastian. Tuesday to Sunday, 11 to 3. Lunch special $12. Tacos, soups and home-style plates. Families welcome, walk-ins. We are La Cocina de Ana.",
+      es:"Servimos almuerzos en Sebastian. Martes a domingo, de 11 a 3. Especial de almuerzo $12. Tacos, sopas y platos caseros. Familias bienvenidas, sin cita. Somos La Cocina de Ana."
+    },
+    facts:{ trade:"food", name:"La Cocina de Ana", city:"Sebastian", address:"", days:"", daysSpec:{kind:"range",from:1,to:6}, hours:"11 AM – 3 PM", price:"$12", priceFrom:false, audience:"", audCodes:["families"], mode:"", modeCode:"walkin", phone:"(555) 019-3355", services:{ en:"Tacos, soups, home-style plates, takeout", es:"Tacos, sopas, platos caseros, comida para llevar" } }
+  }
+
+];
+</script>
+
+<script>
+/* ---------------- helpers ---------------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function tt(key){ return T[lang][key]; }
+function tw(){ return TRADES[facts.trade][lang]; }
+function digitsOf(phone){ return (phone||"").replace(/\D/g,""); }
+
+function showScreen(id){
+  if (typeof stopVideo === "function") stopVideo();
+  ["scr-home","scr-confirm","scr-result","scr-check","scr-week","scr-mnq"].forEach(function(s){ $(s).hidden = (s!==id); });
+  window.scrollTo(0,0);
+}
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    var k = el.getAttribute("data-i18n");
+    if (T[lang][k]) el.innerHTML = T[lang][k];
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach(function(el){
+    var k = el.getAttribute("data-i18n-ph");
+    if (T[lang][k]) el.setAttribute("placeholder", T[lang][k]);
+  });
+  $("lang-es").classList.toggle("on", lang==="es");
+  $("lang-en").classList.toggle("on", lang==="en");
+  if (isSample && currentSample) facts = JSON.parse(JSON.stringify(currentSample.facts));
+  renderSamples();
+  if (facts && typeof renderConfirm === "function") renderConfirm();
+  if (facts) renderAll();
+}
+
+/* ---------------- the parser ----------------
+   Reads the owner's own words (EN or ES) and pulls out only the
+   facts actually given. Anything not given stays "" = missing. */
+function emptyFacts(){
+  return { trade:"general", name:"", city:"", address:"", days:"", daysSpec:null, hours:"", price:"",
+           priceFrom:false, audience:"", audCodes:[], mode:"", modeCode:"", phone:"", services:"" };
+}
+
+function detectTrade(t){
+  var rules = [
+    ["barber",  /\b(barber|barbero|barberia|barbería|haircuts?|hair cut|peluquer|fade)\b| cort\w* (el )?(cabello|pelo)|cut\w* hair/i],
+    ["cleaner", /\b(clean\w*|limpi\w*|housekeeping|maid)\b.*\b(house|home|casa|apart)/i],
+    ["cleaner", /\blimpi\w* casas\b|\bclean\w* houses\b|\bhouse cleaning\b|\blimpieza de casas\b/i],
+    ["food",    /\b(tacos?|lunch|almuerzo|comida|restaurant|restaurante|cocina|food truck|bakery|panader)/i],
+    ["plumber", /\b(plumb\w*|plomer\w*)/i],
+    ["tutor",   /\b(tutor\w*|tutor[ií]a|math help|homework|tareas|clases de)/i],
+    ["realtor", /\b(realtor|real estate|bienes ra[ií]ces|sell\w* houses|vendo casas)/i]
+  ];
+  for (var i=0;i<rules.length;i++){ if (rules[i][1].test(t)) return rules[i][0]; }
+  if (/\bcort\w* cabello\b|\bcorto\b.*\bcabello\b|\bpelo\b/i.test(t)) return "barber";
+  return "general";
+}
+
+function parseWords(text){
+  var f = emptyFacts();
+  if (!text) return f;
+  var raw = " " + text.replace(/\s+/g," ").trim() + " ";
+  var t = raw.toLowerCase();
+
+  /* phone: any run of 10+ digits with separators */
+  var pm = raw.match(/(\+?1[\s.\-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/);
+  if (pm) f.phone = pm[0].trim();
+
+  /* street address — only when the owner actually wrote one */
+  var am = raw.match(/\b(\d{1,6}\s+(?:[A-ZÁÉÍÓÚÑa-záéíóúñ0-9]+\s+){0,3}(?:street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr|lane|ln|calle|avenida)\b\.?)/i);
+  if (am) f.address = am[1].trim();
+
+  /* price: first $ amount, plus a following short unit phrase when it's clean */
+  var pr = raw.match(/\$\s?(\d[\d,]*(\.\d{2})?)\s*([a-záéíóúñ ]{0,22})?/i);
+  if (pr){
+    f.price = "$" + pr[1];
+    var unit = (pr[3]||"").split(/[.,;]/)[0].trim();
+    if (unit && unit.split(" ").length<=3 && !/\d/.test(unit) &&
+        !/^(and|y|con|walk|sin|the|el|la|los|las|de|en|in|a las|open|abiert)/i.test(unit)){
+      f.price = f.price + " " + unit;
+    }
+  }
+  var desde = /\b(desde|from)\s+\$\s?\d/i.test(raw);
+  if (desde) f.priceFrom = true;
+
+  /* trade */
+  f.trade = detectTrade(t);
+
+  /* name: "my name is / me llamo / my business is / mi negocio / we are / somos / this is" */
+  var nm = raw.match(/\b(my name is|me llamo|my business is|my shop is|mi negocio es|mi negocio se llama|we are|somos|this is|i am|soy)\s+([^.,;]+)/i);
+  if (nm){
+    var cand = nm[2].trim();
+    /* stop the name at words that start a new fact */
+    cand = cand.split(/\s+(and we|and i|y nosotros|y yo|in|en|we|i|yo)\s+/i)[0].trim();
+    if (cand.length>=2 && cand.length<=48 && !/\$|\d{3}/.test(cand)) f.name = cand;
+  }
+  /* "Miguel's Cuts offers haircuts…" — a name that leads the sentence */
+  if (!f.name){
+    var nm2 = raw.match(/^\s*([A-ZÁÉÍÓÚÑ][\w'&.\- ]{1,40}?)\s+(offers|ofrece|provides|brinda)\b/i);
+    if (nm2){
+      var c2 = nm2[1].trim();
+      if (c2.length>=2 && !/\$|\d{3}/.test(c2)) f.name = c2;
+    }
+  }
+
+  /* city: "in <City>" / "en <City>" — first capitalized place after in/en */
+  var cm = raw.match(/\b(?:in|en)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)\b/);
+  if (cm && !/^(the|el|la|los|las|my|mi|our|nuestro|nuestra)$/i.test(cm[1])) f.city = cm[1].trim();
+  var cm2 = raw.match(/\b(?:in|en)\s+(houston|palm bay|sebastian|fellsmere|melbourne|vero beach|miami|orlando|dallas|austin|phoenix|los angeles|new york|chicago)\b/i);
+  if (cm2) f.city = cm2[1].replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+
+  /* days: a day-name range or list, EN or ES — stored as a language-free
+     spec so the same facts render correctly in either language */
+  var dayPat = "(monday|tuesday|wednesday|thursday|friday|saturday|sunday|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|mon|tue|wed|thu|fri|sat|sun)";
+  var DAYIDX = { monday:0, tuesday:1, wednesday:2, thursday:3, friday:4, saturday:5, sunday:6,
+                 lunes:0, martes:1, "miércoles":2, miercoles:2, jueves:3, viernes:4, "sábado":5, sabado:5, domingo:6,
+                 mon:0, tue:1, wed:2, thu:3, fri:4, sat:5, sun:6 };
+  var dr = t.match(new RegExp(dayPat + "\\s*(to|through|a|al|and|y|-)\\s*" + dayPat, "i"));
+  if (dr && DAYIDX[dr[1].toLowerCase()]!=null && DAYIDX[dr[3].toLowerCase()]!=null){
+    f.daysSpec = { kind:"range", from:DAYIDX[dr[1].toLowerCase()], to:DAYIDX[dr[3].toLowerCase()] };
+    f.days = titleCase(dr[0]);
+  } else {
+    var dl = t.match(new RegExp(dayPat + "(\\s*,\\s*" + dayPat + ")+", "i"));
+    if (dl){
+      var idxs = [];
+      dl[0].split(",").forEach(function(w){ var k = w.trim().toLowerCase(); if (DAYIDX[k]!=null && idxs.indexOf(DAYIDX[k])<0) idxs.push(DAYIDX[k]); });
+      if (idxs.length>1){ f.daysSpec = { kind:"list", days:idxs }; f.days = titleCase(dl[0]); }
+    }
+    if (!f.daysSpec){
+      if (/\b(every day|todos los d[ií]as|daily|diario)\b/i.test(t)) f.daysSpec = { kind:"every" };
+      else {
+        var ds = t.match(new RegExp("\\b" + dayPat + "\\b", "i"));
+        if (ds && /(every|todos los|cada|open|abiert)/i.test(t) && DAYIDX[ds[1].toLowerCase()]!=null)
+          f.daysSpec = { kind:"single", day:DAYIDX[ds[1].toLowerCase()] };
+      }
+    }
+  }
+
+  /* hours: "9 to 7", "9 am to 7 pm", "de 9 a 7", "8–4" near a day or standalone */
+  var hr = raw.match(/\b(\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)?)\s*(?:to|a|al|-|–|—)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)?)\b/i);
+  if (hr && !new RegExp(dayPat,"i").test(hr[0])) f.hours = hr[0].trim();
+
+  /* who it's for — stored as codes, words are chosen at display time */
+  var audSet = [];
+  var whoRules = [
+    [/\b(women|woman|mujeres|mujer)\b/i, "women"],
+    [/\b(men|man|hombres|hombre)\b/i, "men"],
+    [/\b(kids|children|niños|ninos|niño)\b/i, "kids"],
+    [/\b(famil\w+|familias)\b/i, "families"],
+    [/\b(seniors|adultos mayores|older adults)\b/i, "seniors"],
+    [/\b(students|estudiantes)\b/i, "students"]
+  ];
+  whoRules.forEach(function(r){ if (r[0].test(t)) audSet.push(r[1]); });
+  if (f.trade==="cleaner"){
+    var kinds = [];
+    if (/\b(houses|casas|homes)\b/i.test(t)) kinds.push("houses");
+    if (/\b(apartments|apartamentos|condos)\b/i.test(t)) kinds.push("apartments");
+    if (/\b(offices|oficinas)\b/i.test(t)) kinds.push("offices");
+    if (kinds.length) audSet = kinds;
+  }
+  f.audCodes = audSet;
+
+  /* walk-ins or appointments — stored as a code */
+  var walk = /\b(walk[\s\-]?ins?|sin cita|sin citas|no appointment needed|pasa cuando quieras)\b/i.test(t);
+  var appt = /\b(by appointment|appointments?|con cita|con citas|reserv\w+|book ahead|llama antes)\b/i.test(t);
+  if (walk && appt) f.modeCode = "both";
+  else if (walk) f.modeCode = "walkin";
+  else if (appt) f.modeCode = "appt";
+
+  /* services: clauses that read like a list of offerings */
+  f.services = extractServices(raw, t, f.trade);
+  return f;
+}
+
+function titleCase(s){
+  var lower = { to:1, through:1, and:1, a:1, al:1, y:1, de:1 };
+  return s.split(" ").map(function(tok){
+    if (!tok) return tok;
+    if (lower[tok.toLowerCase()]) return tok.toLowerCase();
+    return tok.charAt(0).toUpperCase() + tok.slice(1);
+  }).join(" ");
+}
+
+function extractServices(raw, t, trade){
+  var found = [];
+  var dict = {
+    barber: ["haircuts","fades","beard trims","beard trim","shaves","kids' cuts","kids cuts","line-ups","cortes","degradados","arreglo de barba","barba","afeitado","cortes para niños","cortes de cabello"],
+    cleaner: ["deep cleaning","regular cleaning","move-in cleaning","move-out cleaning","limpieza profunda","limpieza regular","limpieza de mudanzas","windows","ventanas","laundry","oficinas"],
+    food: ["tacos","soups","sopas","breakfast","desayunos","lunch special","especial de almuerzo","takeout","comida para llevar","catering","home-style plates","platos caseros","delivery","domicilio"],
+    plumber: ["leaks","fugas","water heaters","drains","drenajes","repairs","reparaciones","emergencies","emergencias"],
+    tutor: ["math","matemáticas","reading","lectura","homework help","ayuda con tareas","english","inglés","spanish","español","test prep"],
+    realtor: ["homes for sale","casas en venta","rentals","rentas","first-time buyers","compradores"],
+    general: []
+  };
+  (dict[trade]||[]).forEach(function(w){ if (t.indexOf(w)>=0) found.push(w); });
+  /* de-dup, keep owner's order of appearance, cap at 5, title-case */
+  found = found.filter(function(v,i){ return found.indexOf(v)===i; }).slice(0,5);
+  return found.map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(", ");
+}
+
+/* merge a correction into existing facts: non-empty new values win.
+   Trade is special: a correction that names no trade must not erase it. */
+function mergeFacts(base, extra){
+  var out = {};
+  Object.keys(base).forEach(function(k){ out[k] = base[k]; });
+  Object.keys(extra).forEach(function(k){
+    if (k === "trade" || k === "priceFrom") return;
+    if (k === "audCodes"){ if (extra.audCodes && extra.audCodes.length) out.audCodes = extra.audCodes; return; }
+    if (k === "daysSpec"){ if (extra.daysSpec) out.daysSpec = extra.daysSpec; return; }
+    if (extra[k] !== "" && extra[k] != null) out[k] = extra[k];
+  });
+  if (extra.price) out.priceFrom = !!extra.priceFrom;
+  if (extra.trade && extra.trade !== "general") out.trade = extra.trade;
+  return out;
+}
+
+function missingKeys(f){
+  var v = viewFacts(f);
+  var keys = ["name","city","address","days","hours","price","phone","mode"];
+  return keys.filter(function(k){ return !v[k]; });
+}
+
+/* -------- display localization: canonical facts -> current language --------
+   Parsed facts store language-free codes/specs; these helpers turn them
+   into words in the language on screen right now, so switching language
+   never leaves a page half in one language and half in the other. */
+var DAYNAMES = {
+  en:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+  es:["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]
+};
+function daysDisplay(f){
+  if (f.daysSpec){
+    var names = DAYNAMES[lang], sp = f.daysSpec;
+    if (sp.kind==="every") return lang==="es" ? "Todos los días" : "Every day";
+    if (sp.kind==="range") return lang==="es" ? names[sp.from]+" a "+names[sp.to].toLowerCase() : names[sp.from]+" to "+names[sp.to];
+    if (sp.kind==="single") return names[sp.day];
+    if (sp.kind==="list"){
+      var parts = sp.days.map(function(i){ return lang==="es" ? names[i].toLowerCase() : names[i]; });
+      var s = parts.join(", ");
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+  }
+  return f.days || "";
+}
+var MODELBL = {
+  walkin:{ en:"Walk-ins welcome", es:"Sin cita — pasa cuando quieras" },
+  appt:{ en:"By appointment — call or message first", es:"Con cita — llama o escribe antes" },
+  both:{ en:"Walk-ins and appointments", es:"Sin cita y con cita" }
+};
+function modeDisplay(f){
+  if (f.modeCode && MODELBL[f.modeCode]) return MODELBL[f.modeCode][lang];
+  return f.mode || "";
+}
+var AUDLBL = {
+  women:{en:"Women",es:"Mujeres"}, men:{en:"Men",es:"Hombres"}, kids:{en:"Kids",es:"Niños"},
+  families:{en:"Families",es:"Familias"}, seniors:{en:"Seniors",es:"Adultos mayores"},
+  students:{en:"Students",es:"Estudiantes"}, houses:{en:"Houses",es:"Casas"},
+  apartments:{en:"Apartments",es:"Apartamentos"}, offices:{en:"Offices",es:"Oficinas"}
+};
+function audDisplay(f){
+  if (f.audCodes && f.audCodes.length){
+    var labels = f.audCodes.map(function(c){ return (AUDLBL[c]||{})[lang] || c; });
+    if (labels.length===1) return labels[0];
+    if (labels.length===2) return labels[0] + (lang==="es" ? " y " : " and ") + labels[1];
+    return labels.slice(0,-1).join(", ") + (lang==="es" ? " y " : " and ") + labels[labels.length-1];
+  }
+  return f.audience || "";
+}
+function priceDisplay(f){
+  if (!f.price) return "";
+  if (f.priceFrom) return (lang==="es" ? "Desde " : "From ") + f.price;
+  return f.price;
+}
+/* a shallow copy of the facts with every display field localized */
+function viewFacts(f){
+  if (!f) return f;
+  var v = {};
+  Object.keys(f).forEach(function(k){ v[k] = f[k]; });
+  v.days = daysDisplay(f);
+  v.mode = modeDisplay(f);
+  v.audience = audDisplay(f);
+  v.price = priceDisplay(f);
+  if (f.services && typeof f.services === "object") v.services = f.services[lang] || "";
+  return v;
+}
+</script>
+
+<script>
+/* ---------------- the ten questions ----------------
+   Each question names the fact it needs. If the fact exists, the
+   answer is composed from it. If not, it's a missing line. */
+function S(en, es){ return lang==="es" ? es : en; }
+
+var QUESTIONS = {
+  barber: [
+    { need:"city", q:function(){ return S("Who cuts hair near me?","¿Quién corta cabello cerca de mí?"); },
+      a:function(f){ return S(f.name+" cuts hair in "+f.city+".",""+f.name+" corta cabello en "+f.city+"."); } },
+    { need:"price", q:function(){ return S("How much is a haircut?","¿Cuánto cuesta un corte de cabello?"); },
+      a:function(f){ return S("A haircut is "+f.price+" at "+f.name+".","Un corte cuesta "+f.price+" en "+f.name+"."); } },
+    { need:"mode", q:function(){ return S("Do I need an appointment, or can I walk in?","¿Necesito cita o puedo llegar sin cita?"); },
+      a:function(f){ return f.mode+"."; } },
+    { need:"days", q:function(){ return S("What days are you open?","¿Qué días abres?"); },
+      a:function(f){ return S("Open "+f.days+".","Abierto "+f.days.toLowerCase()+"."); } },
+    { need:"hours", q:function(){ return S("What hours are you open?","¿En qué horario abres?"); },
+      a:function(f){ return S("Hours: "+f.hours+".","Horario: "+f.hours+"."); } },
+    { need:"audience", q:function(){ return S("Who do you cut hair for?","¿A quién le cortas el cabello?"); },
+      a:function(f){ return S(f.name+" cuts hair for: "+f.audience+".",""+f.name+" corta cabello para: "+f.audience+"."); } },
+    { need:"services", q:function(){ return S("What services do you offer?","¿Qué servicios ofreces?"); },
+      a:function(f){ return S("Services: "+f.services+".","Servicios: "+f.services+"."); } },
+    { need:"phone", q:function(){ return S("How do I reach you?","¿Cómo te contacto?"); },
+      a:function(f){ return S("Call or message "+f.phone+".","Llama o escribe al "+f.phone+"."); } },
+    { need:"city", q:function(){ return S("Where exactly are you?","¿Dónde estás exactamente?"); },
+      a:function(f){ return f.address ? S("Address: "+f.address+", "+f.city+".","Dirección: "+f.address+", "+f.city+".") : S(f.name+" is in "+f.city+". The exact street address has not been added by the owner yet.",""+f.name+" está en "+f.city+". El dueño todavía no agregó la dirección exacta."); } },
+    { need:"price", q:function(){ return S("Is the price the same for kids?","¿El precio es el mismo para niños?"); },
+      a:function(f){ return S("The price given is "+f.price+". Ask about kids' prices when you call — the owner did not give a separate one.","El precio dado es "+f.price+". Pregunta el precio para niños cuando llames — el dueño no dio uno aparte."); } }
+  ],
+  cleaner: [
+    { need:"city", q:function(){ return S("Who cleans houses near me?","¿Quién limpia casas cerca de mí?"); },
+      a:function(f){ return S(f.name+" cleans houses in "+f.city+".",""+f.name+" limpia casas en "+f.city+"."); } },
+    { need:"price", q:function(){ return S("How much does a cleaning cost?","¿Cuánto cuesta una limpieza?"); },
+      a:function(f){ return S("Cleaning is "+f.price+".","La limpieza es "+f.price+"."); } },
+    { need:"mode", q:function(){ return S("How do I book a cleaning?","¿Cómo reservo una limpieza?"); },
+      a:function(f){ return f.mode+"."; } },
+    { need:"days", q:function(){ return S("What days do you clean?","¿Qué días limpias?"); },
+      a:function(f){ return S("Available "+f.days+".","Disponible "+f.days.toLowerCase()+"."); } },
+    { need:"hours", q:function(){ return S("What hours do you work?","¿En qué horario trabajas?"); },
+      a:function(f){ return S("Hours: "+f.hours+".","Horario: "+f.hours+"."); } },
+    { need:"audience", q:function(){ return S("What kind of places do you clean?","¿Qué tipo de lugares limpias?"); },
+      a:function(f){ return S(f.name+" cleans: "+f.audience+".",""+f.name+" limpia: "+f.audience+"."); } },
+    { need:"services", q:function(){ return S("What kind of cleaning do you do?","¿Qué tipo de limpieza haces?"); },
+      a:function(f){ return S("Services: "+f.services+".","Servicios: "+f.services+"."); } },
+    { need:"phone", q:function(){ return S("How do I reach you?","¿Cómo te contacto?"); },
+      a:function(f){ return S("Call or message "+f.phone+".","Llama o escribe al "+f.phone+"."); } },
+    { need:"city", q:function(){ return S("Which area do you cover?","¿Qué zona cubres?"); },
+      a:function(f){ return S(f.name+" works in "+f.city+".",""+f.name+" trabaja en "+f.city+"."); } },
+    { need:"services", q:function(){ return S("Do you bring your own supplies?","¿Traes tus propios productos de limpieza?"); },
+      a:function(f){ return S("The services listed are: "+f.services+". Ask about supplies when you book — the owner did not say.","Los servicios dados son: "+f.services+". Pregunta por los productos al reservar — la dueña no lo dijo."); } }
+  ],
+  food: [
+    { need:"city", q:function(){ return S("Where is a good lunch near me?","¿Dónde hay un buen almuerzo cerca de mí?"); },
+      a:function(f){ return S(f.name+" serves lunch in "+f.city+".",""+f.name+" sirve almuerzos en "+f.city+"."); } },
+    { need:"price", q:function(){ return S("How much is lunch?","¿Cuánto cuesta el almuerzo?"); },
+      a:function(f){ return S("Lunch: "+f.price+".","Almuerzo: "+f.price+"."); } },
+    { need:"mode", q:function(){ return S("Do I need a reservation?","¿Necesito reservación?"); },
+      a:function(f){ return f.mode+"."; } },
+    { need:"days", q:function(){ return S("What days are you open?","¿Qué días abres?"); },
+      a:function(f){ return S("Open "+f.days+".","Abierto "+f.days.toLowerCase()+"."); } },
+    { need:"hours", q:function(){ return S("What hours do you serve?","¿En qué horario sirves?"); },
+      a:function(f){ return S("Hours: "+f.hours+".","Horario: "+f.hours+"."); } },
+    { need:"audience", q:function(){ return S("Is it good for families?","¿Es bueno para familias?"); },
+      a:function(f){ return S("At "+f.name+": "+f.audience+".","En "+f.name+": "+f.audience+"."); } },
+    { need:"services", q:function(){ return S("What's on the menu?","¿Qué hay en el menú?"); },
+      a:function(f){ return S("On the menu: "+f.services+".","En el menú: "+f.services+"."); } },
+    { need:"phone", q:function(){ return S("How do I reach you or order?","¿Cómo te contacto o pido?"); },
+      a:function(f){ return S("Call or message "+f.phone+".","Llama o escribe al "+f.phone+"."); } },
+    { need:"city", q:function(){ return S("Where are you located?","¿Dónde están ubicados?"); },
+      a:function(f){ return S(f.name+" is in "+f.city+".",""+f.name+" está en "+f.city+"."); } },
+    { need:"services", q:function(){ return S("Can I get food to go?","¿Puedo pedir para llevar?"); },
+      a:function(f){ return S("What they offer: "+f.services+". If takeout isn't listed, ask when you call.","Lo que ofrecen: "+f.services+". Si no aparece «para llevar», pregunta cuando llames."); } }
+  ]
+};
+function genericQuestions(nounEn, nounEs, verbEn, verbEs){
+  var noun = lang==="es" ? nounEs : nounEn;
+  return [
+    { need:"city", q:function(){ return S("Who is a "+nounEn+" near me?","¿Quién es "+nounEs+" cerca de mí?"); },
+      a:function(f){ return S(f.name+" is a "+nounEn+" in "+f.city+".",""+f.name+" es "+nounEs+" en "+f.city+"."); } },
+    { need:"price", q:function(){ return S("How much does it cost?","¿Cuánto cuesta?"); },
+      a:function(f){ return S("Price: "+f.price+".","Precio: "+f.price+"."); } },
+    { need:"mode", q:function(){ return S("Do I need an appointment?","¿Necesito cita?"); },
+      a:function(f){ return f.mode+"."; } },
+    { need:"days", q:function(){ return S("What days are you available?","¿Qué días estás disponible?"); },
+      a:function(f){ return S("Available "+f.days+".","Disponible "+f.days.toLowerCase()+"."); } },
+    { need:"hours", q:function(){ return S("What hours?","¿En qué horario?"); },
+      a:function(f){ return S("Hours: "+f.hours+".","Horario: "+f.hours+"."); } },
+    { need:"audience", q:function(){ return S("Who do you work with?","¿Con quién trabajas?"); },
+      a:function(f){ return S(f.name+" works with: "+f.audience+".",""+f.name+" trabaja con: "+f.audience+"."); } },
+    { need:"services", q:function(){ return S("What services do you offer?","¿Qué servicios ofreces?"); },
+      a:function(f){ return S("Services: "+f.services+".","Servicios: "+f.services+"."); } },
+    { need:"phone", q:function(){ return S("How do I reach you?","¿Cómo te contacto?"); },
+      a:function(f){ return S("Call or message "+f.phone+".","Llama o escribe al "+f.phone+"."); } },
+    { need:"city", q:function(){ return S("Which area do you serve?","¿Qué zona atiendes?"); },
+      a:function(f){ return S(f.name+" serves "+f.city+".",""+f.name+" atiende "+f.city+"."); } },
+    { need:"days", q:function(){ return S("How soon can we start?","¿Qué tan pronto podemos empezar?"); },
+      a:function(f){ return S("Working days are "+f.days+". Call to agree on the exact day.","Los días de trabajo son "+f.days.toLowerCase()+". Llama para acordar el día exacto."); } }
+  ];
+}
+function questionsFor(f){
+  if (QUESTIONS[f.trade]) return QUESTIONS[f.trade];
+  var tr = TRADES[f.trade] || TRADES.general;
+  return genericQuestions(tr.en.noun, tr.es.noun, tr.en.verb, tr.es.verb);
+}
+
+/* ---------------- render: samples ---------------- */
+function renderSamples(){
+  var host = $("sample-list");
+  host.innerHTML = "";
+  SAMPLES.forEach(function(s){
+    var f = viewFacts(s.facts);
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "card samplecard";
+    b.innerHTML = '<span class="sampletag">'+esc(tt("sample"))+"</span>"+
+      '<div class="sname">'+esc(f.name)+"</div>"+
+      '<div class="sline">'+esc(TRADES[f.trade][lang].do)+" · "+esc(f.city)+" · "+esc(f.days)+"</div>"+
+      '<div class="sline">“'+esc(s.words[lang])+"”</div>";
+    b.addEventListener("click", function(){
+      facts = JSON.parse(JSON.stringify(s.facts));
+      isSample = true;
+      currentSample = s;
+      checkState = {};
+      showPhone = false; primaryContact = "call"; pendingChange = null;
+      bumpFacts();
+      renderConfirm();
+      showScreen("scr-confirm");
+    });
+    host.appendChild(b);
+  });
+}
+
+/* ---------------- render: the page ---------------- */
+function renderAll(){
+  renderPage(); renderQuestions(); renderPost(); renderWeek(); renderCheck();
+  if (typeof renderPostPhoto === "function") renderPostPhoto();
+  if (typeof renderVideoPoster === "function") renderVideoPoster();
+}
+
+function renderPage(){
+  var f = viewFacts(facts), tr = tw();
+  $("sample-banner").innerHTML = isSample
+    ? '<div class="missingbanner" style="background:var(--warn-soft);color:var(--warn);">'+esc(tt("samplebanner"))+"</div>" : "";
+  var rows = [];
+  function row(labelKey, val){ if (val) rows.push('<div class="factrow"><div class="flabel">'+esc(tt(labelKey))+'</div><div class="fval">'+esc(val)+"</div></div>"); }
+  row("fCity", f.city);
+  row("fAddress", f.address);
+  row("fDays", f.days);
+  row("fHours", f.hours);
+  row("fPrice", f.price);
+  row("fWho", f.audience);
+  row("fMode", f.mode);
+  row("fServices", f.services);
+  if (showPhone) row("fPhone", f.phone);
+  /* exactly ONE primary contact action. The phone appears only with
+     the owner's explicit consent; everything else is a small text link. */
+  var contact = "";
+  var textlinks = [];
+  if (!isSample && moreURL) textlinks.push('<a href="'+esc(moreURL)+'" target="_blank" rel="noopener">'+esc(tt("seemore"))+'</a>');
+  if (f.phone && showPhone){
+    var d = digitsOf(f.phone);
+    var full = (d.length===10 ? "1"+d : d);
+    var callA = '<a class="call" href="tel:+' + full + '">'+esc(tt("call"))+'</a>';
+    var waA = '<a class="wa" href="https://wa.me/' + full + '" target="_blank" rel="noopener">'+esc(tt("wa"))+'</a>';
+    contact = '<div class="contactrow">'+ (primaryContact==="wa" ? waA : callA) +"</div>";
+    textlinks.push(primaryContact==="wa"
+      ? '<a href="tel:+' + full + '">'+esc(tt("call"))+'</a>'
+      : '<a href="https://wa.me/' + full + '" target="_blank" rel="noopener">'+esc(tt("wa"))+'</a>');
+  } else {
+    contact = '<p class="big" style="font-weight:700;margin-top:14px;">'+esc(tt("contactline"))+"</p>";
+  }
+  if (textlinks.length) contact += '<p class="textlinks">'+textlinks.join(" · ")+"</p>";
+  contact += '<p class="muted small">'+esc(tt("tapnote"))+"</p>";
+  var attachHtml = (typeof ownerAttachHtml === "function") ? ownerAttachHtml() : "";
+  var photoHtml = (!isSample && photoData) ? '<img class="bizphoto" src="'+photoData+'" alt="">' : "";
+  $("bizpage").innerHTML =
+    '<div class="bizpage">'+photoHtml+'<p class="bname">'+esc(f.name || tt("unnamed"))+'</p>'+
+    '<p class="btrade">'+esc(tr.do)+(f.city ? " · "+esc(f.city) : "")+"</p>"+
+    rows.join("") + contact + attachHtml + "</div>";
+  var miss = missingKeys(f);
+  var labels = { name:tt("fName"), city:tt("fCity"), address:tt("fAddress"), days:tt("fDays"), hours:tt("fHours"), price:tt("fPrice"), phone:tt("fPhone"), mode:tt("fMode") };
+  $("missing-banner").innerHTML = miss.length
+    ? '<div class="missingbanner">'+esc(tt("missingpre"))+ miss.map(function(k){ return labels[k]; }).join(tt("missingjoin")) + esc(tt("missingpost")) +"</div>"
+    : "";
+  $("makeown-wrap").innerHTML = isSample
+    ? '<button class="btn" id="makeown-btn" type="button">'+esc(tt("makeown"))+"</button>" : "";
+  var mo = $("makeown-btn");
+  if (mo) mo.addEventListener("click", function(){
+    isSample=false; currentSample=null; facts=null; $("saybox").value="";
+    photoData=null; photoImg=null; moreURL=""; $("photo-in").value=""; $("link-in").value="";
+    showPhone=false; primaryContact="call"; pendingChange=null; bumpFacts();
+    if (ownerVideoURL){ try { URL.revokeObjectURL(ownerVideoURL); } catch(e){} ownerVideoURL=""; }
+    var ov=$("ownvideo-in"); if (ov) ov.value="";
+    if (typeof renderOwnerVideo === "function") renderOwnerVideo();
+    if (typeof renderPhotoPreview === "function") renderPhotoPreview();
+    showScreen("scr-home");
+  });
+}
+
+/* ---------------- render: questions ---------------- */
+function renderQuestions(){
+  var f = viewFacts(facts), qs = questionsFor(facts), host = $("qlist");
+  host.innerHTML = "";
+  qs.forEach(function(item, idx){
+    var div = document.createElement("div");
+    var val = f[item.need];
+    if (val){
+      div.className = "qitem";
+      div.innerHTML = '<div class="qq">'+esc(item.q())+'</div><div class="qa">'+esc(item.a(f))+"</div>";
+    } else {
+      div.className = "qitem miss";
+      div.innerHTML = '<div class="qq">'+esc(item.q())+'</div><div class="qa">'+esc(tt("missline"))+"</div>"+
+        '<div class="quickadd"><input type="text" id="qa-in-'+idx+'" placeholder="'+esc(T[lang].addph[item.need]||"")+'">'+
+        '<button type="button" data-add="'+idx+'" data-need="'+item.need+'">'+esc(tt("addbtn"))+"</button></div>";
+    }
+    host.appendChild(div);
+  });
+  host.querySelectorAll("[data-add]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var idx = btn.getAttribute("data-add"), need = btn.getAttribute("data-need");
+      var inp = $("qa-in-"+idx), v = (inp.value||"").trim();
+      if (!v) { inp.focus(); return; }
+      facts[need] = v;
+      bumpFacts();
+      /* a hand-typed fact replaces any parsed canonical form */
+      if (need==="days") facts.daysSpec = null;
+      if (need==="mode") facts.modeCode = "";
+      if (need==="audience") facts.audCodes = [];
+      if (need==="price") facts.priceFrom = false;
+      renderAll();
+    });
+  });
+}
+
+/* ---------------- render: the post ---------------- */
+function buildPostLang(f, L){
+  var tr = TRADES[f.trade][L];
+  var name = f.name || T[L].unnamed;
+  var lines = [];
+  if (L==="es"){
+    lines.push("¡Hola! Soy "+name+". "+tr.do+(f.city ? " en "+f.city : "")+".");
+    var when = [];
+    if (f.days) when.push(f.days.toLowerCase());
+    if (f.hours) when.push(f.hours);
+    if (when.length) lines.push("Abierto: "+when.join(", ")+".");
+    if (f.price) lines.push("Precio: "+f.price+".");
+    if (f.services) lines.push("Servicios: "+f.services+".");
+    if (f.audience) lines.push("Para: "+f.audience+".");
+    if (f.mode) lines.push(f.mode+".");
+    if (f.phone) lines.push("Llama o escribe por WhatsApp: "+f.phone+".");
+  } else {
+    lines.push("Hi! This is "+name+". "+tr.do+(f.city ? " in "+f.city : "")+".");
+    var when2 = [];
+    if (f.days) when2.push(f.days);
+    if (f.hours) when2.push(f.hours);
+    if (when2.length) lines.push("Open: "+when2.join(", ")+".");
+    if (f.price) lines.push("Price: "+f.price+".");
+    if (f.services) lines.push("Services: "+f.services+".");
+    if (f.audience) lines.push("For: "+f.audience+".");
+    if (f.mode) lines.push(f.mode+".");
+    if (f.phone) lines.push("Call or WhatsApp: "+f.phone+".");
+  }
+  return lines.join("\n");
+}
+function buildPost(f){ return buildPostLang(f, lang); }
+
+function renderPost(){
+  if (postVersion !== factsVersion){
+    $("post-es").value = buildPostLang(viewFactsL(facts, "es"), "es");
+    $("post-en").value = buildPostLang(viewFactsL(facts, "en"), "en");
+    $("share-msg").value = buildShare(viewFacts(facts));
+    postVersion = factsVersion;
+  }
+}
+
+/* speakable summary for Listen */
+function speakText(){
+  var f = viewFacts(facts), tr = tw();
+  var parts = [];
+  parts.push((f.name || tt("unnamed")) + ". " + tr.do + (f.city ? (lang==="es" ? " en " : " in ") + f.city + "." : "."));
+  if (f.days) parts.push(f.days + (f.hours ? ", " + f.hours : "") + ".");
+  if (f.price) parts.push(tt("fPrice") + ": " + f.price + ".");
+  if (f.mode) parts.push(f.mode + ".");
+  if (f.phone) parts.push(tt("fPhone") + ": " + f.phone.split("").join(" ") + ".");
+  return tt("speakpage") + parts.join(" ") + " " + tt("speakpost") + buildPost(f).replace(/\n/g," ");
+}
+</script>
+
+<script>
+/* ---------------- photo + link (owner inputs, session only) ----------------
+   The photo is read on this device and never uploaded anywhere.
+   The link is only shown as a button — never fetched or scraped. */
+var photoData = null;   // data URL of the owner's photo, this session only
+var photoImg = null;    // decoded Image for the video's opening scene
+var moreURL = "";       // link the owner pasted (Facebook / Instagram / Google)
+
+function renderPhotoPreview(){
+  var host = $("photo-preview");
+  if (!photoData){ host.innerHTML = ""; return; }
+  host.innerHTML = '<div class="photothumb"><img src="'+photoData+'" alt="">'+
+    '<p class="muted small">'+esc(tt("photonote"))+'</p>'+
+    '<button class="btn smallbtn plain" type="button" id="photo-remove">'+esc(tt("removephoto"))+'</button></div>';
+  $("photo-remove").addEventListener("click", function(){
+    photoData = null; photoImg = null; $("photo-in").value = "";
+    renderPhotoPreview();
+    if (facts && !isSample) renderAll();
+  });
+}
+
+function loadPhotoFile(file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    var img = new Image();
+    img.onload = function(){
+      var max = 1280, w = img.naturalWidth || 1, h = img.naturalHeight || 1;
+      var scale = Math.min(1, max / Math.max(w, h));
+      if (scale < 1){
+        var c = document.createElement("canvas");
+        c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        photoData = c.toDataURL("image/jpeg", 0.85);
+        var img2 = new Image();
+        img2.onload = function(){ photoImg = img2; renderPhotoPreview(); if (facts && !isSample) renderAll(); };
+        img2.src = photoData;
+      } else {
+        photoData = reader.result; photoImg = img;
+        renderPhotoPreview();
+        if (facts && !isSample) renderAll();
+      }
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderPostPhoto(){
+  var host = $("post-photo");
+  if (!host) return;
+  if (!isSample && photoData){
+    host.innerHTML = '<img class="postphoto" src="'+photoData+'" alt="">'+
+      '<p class="muted small" style="margin-top:0;">'+esc(tt("postphoto"))+"</p>";
+  } else host.innerHTML = "";
+}
+
+$("photo-btn").addEventListener("click", function(){ $("photo-in").click(); });
+$("photo-in").addEventListener("change", function(){
+  if (this.files && this.files[0]) loadPhotoFile(this.files[0]);
+});
+$("link-btn").addEventListener("click", function(){
+  var w = $("link-wrap");
+  w.hidden = !w.hidden;
+  if (!w.hidden) $("link-in").focus();
+});
+$("link-in").addEventListener("change", function(){
+  var v = (this.value || "").trim();
+  if (v && !/^https?:\/\//i.test(v)) v = "https://" + v;
+  moreURL = v;
+  if (facts && !isSample) renderAll();
+});
+
+/* ---------------- the video ----------------
+   Generated on-device from the same verified facts as the page.
+   TEXT LAW: every line on screen is one of the owner's own facts —
+   no filler lines, no repeats, no truncated words, no empty boxes.
+   A scene exists only when its fact exists. Silent: the text IS
+   the caption. Nothing is uploaded; the file is made in the browser. */
+var SCENE_MS = 4000;
+var vid = { scenes: [], playing: false, raf: 0 };
+var videoBlob = null, videoURL = "", videoFile = null;
+
+function canvasStreamOf(canvas){
+  var fn = canvas.captureStream || canvas.webkitCaptureStream;
+  return fn ? fn.call(canvas, 30) : null;
+}
+function recorderSupported(canvas){
+  return !!(canvas && (canvas.captureStream || canvas.webkitCaptureStream) && typeof MediaRecorder !== "undefined");
+}
+function shareFileSupported(){
+  if (!videoFile || !navigator.canShare || !navigator.share) return false;
+  try { return navigator.canShare({ files: [videoFile] }); } catch (e) { return false; }
+}
+
+function vidPalette(){
+  var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return dark
+    ? { bg:"#241d17", ink:"#f3ead9", muted:"#b8a88f", accent:"#e07f3e", soft:"#2e251c" }
+    : { bg:"#faf6ef", ink:"#2b2118", muted:"#6f6151", accent:"#b34a12", soft:"#f3ead9" };
+}
+
+function buildScenes(){
+  var f = viewFacts(facts), tr = tw();
+  var name = f.name || tt("unnamed");
+  var scenes = [];
+  scenes.push({ photo: (!isSample && photoImg) ? photoImg : null,
+                kicker: tr.do, title: name, sub: f.city || "" });
+  if (f.days || f.hours)
+    scenes.push({ kicker: tt("vOpen"), title: f.days || "", sub: f.hours || "" });
+  if (f.price)
+    scenes.push({ kicker: tt("fPrice"), title: f.price, sub: "" });
+  if (f.audience || f.services)
+    scenes.push({ kicker: tt("fWho"), title: f.audience || f.services, sub: f.audience ? (f.services || "") : "" });
+  /* call-to-action scene: only the contact facts actually given —
+     no greeting or filler line is invented for it */
+  if (f.phone)
+    scenes.push({ kicker: tt("call") + " · " + tt("wa"), title: f.phone, sub: f.mode || "" });
+  return scenes;
+}
+
+function wrapText(ctx, text, maxW){
+  var words = String(text).split(/\s+/), lines = [], cur = "";
+  words.forEach(function(w){
+    var test = cur ? cur + " " + w : w;
+    if (ctx.measureText(test).width <= maxW || !cur) cur = test;
+    else { lines.push(cur); cur = w; }
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+/* shrink the font until the text fits whole — words are never cut */
+function fitText(ctx, text, maxW, base, weight, maxLines){
+  var size = base;
+  while (size > 26){
+    ctx.font = weight + " " + size + "px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+    var lines = wrapText(ctx, text, maxW);
+    if (lines.length <= maxLines) return { size: size, lines: lines };
+    size -= 6;
+  }
+  ctx.font = weight + " " + size + "px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  return { size: size, lines: wrapText(ctx, text, maxW) };
+}
+function drawKicker(ctx, text, cx, y, pal){
+  if (!text) return 0;
+  ctx.font = "700 34px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  ctx.fillStyle = pal.accent;
+  ctx.fillText(text.toUpperCase(), cx, y);
+  return 48;
+}
+function drawTitle(ctx, text, cx, y, pal, base){
+  var fit = fitText(ctx, text, 600, base, "800", 3);
+  ctx.font = "800 " + fit.size + "px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  ctx.fillStyle = pal.ink;
+  var lh = fit.size * 1.14, h = 0;
+  fit.lines.forEach(function(line, i){ ctx.fillText(line, cx, y + i * lh); h = (i + 1) * lh; });
+  return h;
+}
+function drawSub(ctx, text, cx, y, pal){
+  if (!text) return 0;
+  var fit = fitText(ctx, text, 600, 46, "600", 3);
+  ctx.font = "600 " + fit.size + "px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  ctx.fillStyle = pal.muted;
+  var lh = fit.size * 1.2, h = 0;
+  fit.lines.forEach(function(line, i){ ctx.fillText(line, cx, y + i * lh); h = (i + 1) * lh; });
+  return h;
+}
+function drawCover(ctx, img, x, y, w, h){
+  var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+  var scale = Math.max(w / iw, h / ih);
+  var dw = iw * scale, dh = ih * scale;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  ctx.restore();
+}
+
+function drawScene(ctx, sc, alpha, lift){
+  var W = 720, H = 1280, pal = vidPalette();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = pal.bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = pal.accent; ctx.fillRect(0, 0, W, 26);
+  ctx.fillRect(0, H - 26, W, 26);
+  ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+  ctx.save();
+  ctx.translate(0, lift);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  if (sc.photo){
+    drawCover(ctx, sc.photo, 60, 80, 600, 700);
+    var y = 830;
+    y += drawKicker(ctx, sc.kicker, W / 2, y, pal) + 14;
+    y += drawTitle(ctx, sc.title, W / 2, y, pal, 80);
+    if (sc.sub) drawSub(ctx, sc.sub, W / 2, y + 26, pal);
+  } else {
+    var blockH = 0;
+    if (sc.kicker) blockH += 62;
+    var probe = document.createElement("canvas").getContext("2d");
+    blockH += fitText(probe, sc.title, 600, 96, "800", 3).lines.length * 96 * 1.14;
+    if (sc.sub) blockH += 26 + fitText(probe, sc.sub, 600, 46, "600", 3).lines.length * 46 * 1.2;
+    var yy = Math.max(120, (H - blockH) / 2);
+    if (sc.kicker) yy += drawKicker(ctx, sc.kicker, W / 2, yy, pal) + 14;
+    yy += drawTitle(ctx, sc.title, W / 2, yy, pal, 96);
+    if (sc.sub) drawSub(ctx, sc.sub, W / 2, yy + 26, pal);
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+function drawSceneAt(ctx, idx, p){
+  var alpha = p < 0.12 ? p / 0.12 : 1;
+  var lift = (1 - Math.min(1, p / 0.18)) * 26;
+  drawScene(ctx, vid.scenes[idx], alpha, lift);
+}
+
+function stopVideo(){
+  vid.playing = false;
+  if (vid.raf) cancelAnimationFrame(vid.raf);
+  vid.raf = 0;
+}
+
+function playVideo(onDone){
+  var canvas = $("vcanvas");
+  if (!canvas || !facts) return;
+  canvas.hidden = false;
+  var vf = $("vfile"); if (vf) vf.hidden = true;
+  stopVideo();
+  vid.scenes = buildScenes();
+  var ctx = canvas.getContext("2d");
+  var start = null, total = vid.scenes.length * SCENE_MS;
+  vid.playing = true;
+  function frame(ts){
+    if (!vid.playing) return;
+    if (!start) start = ts;
+    var elapsed = ts - start;
+    if (elapsed >= total){
+      vid.playing = false;
+      drawScene(ctx, vid.scenes[vid.scenes.length - 1], 1, 0);
+      if (onDone) onDone();
+      return;
+    }
+    var idx = Math.floor(elapsed / SCENE_MS);
+    drawSceneAt(ctx, idx, (elapsed - idx * SCENE_MS) / SCENE_MS);
+    vid.raf = requestAnimationFrame(frame);
+  }
+  vid.raf = requestAnimationFrame(frame);
+}
+
+function renderVideoPoster(){
+  var canvas = $("vcanvas");
+  if (!canvas || !facts) return;
+  stopVideo();
+  vid.scenes = buildScenes();
+  canvas.hidden = false;
+  drawScene(canvas.getContext("2d"), vid.scenes[0], 1, 0);
+  /* facts changed, so any earlier video file is stale: reset the
+     download/share choices until a new file is created */
+  if (videoURL){ try { URL.revokeObjectURL(videoURL); } catch (e) {} }
+  videoBlob = null; videoURL = ""; videoFile = null;
+  var vf = $("vfile");
+  if (vf){ vf.removeAttribute("src"); vf.hidden = true; }
+  $("vdl").hidden = true;
+  $("vshare").hidden = true;
+  $("vnote").textContent = "";
+  /* the create/download button is ALWAYS shown — never hidden —
+     so the owner always sees the choice to make and download the video */
+  $("vrec").hidden = false;
+  $("vrec").disabled = false;
+  $("vplay").disabled = false;
+  if (!recorderSupported(canvas)) $("vnote").textContent = tt("vnosupport");
+}
+
+function recordVideo(){
+  var canvas = $("vcanvas");
+  if (vid.playing) return;
+  if (!recorderSupported(canvas)){
+    playVideo();
+    $("vnote").textContent = tt("vnosupport");
+    return;
+  }
+  var stream = canvasStreamOf(canvas);
+  if (!stream){
+    playVideo();
+    $("vnote").textContent = tt("vnosupport");
+    return;
+  }
+  var mime = "";
+  ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].forEach(function(m){
+    if (!mime && typeof MediaRecorder.isTypeSupported === "function" && MediaRecorder.isTypeSupported(m)) mime = m;
+  });
+  var rec;
+  try {
+    rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 5000000 } : { videoBitsPerSecond: 5000000 });
+  } catch (e) {
+    playVideo();
+    $("vnote").textContent = tt("vnosupport");
+    return;
+  }
+  var chunks = [];
+  rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = function(){
+    videoBlob = new Blob(chunks, { type: (rec.mimeType || mime || "video/webm").split(";")[0] });
+    if (videoURL){ try { URL.revokeObjectURL(videoURL); } catch (e) {} }
+    videoURL = URL.createObjectURL(videoBlob);
+    var base = (facts.name || "negocio").replace(/[^\wáéíóúñü]+/gi, "-").toLowerCase();
+    var fname = "video-" + base + (videoBlob.type.indexOf("mp4") >= 0 ? ".mp4" : ".webm");
+    try { videoFile = new File([videoBlob], fname, { type: videoBlob.type }); } catch (e) { videoFile = null; }
+    /* 1) the download choice: a real download link… */
+    var dl = $("vdl");
+    dl.href = videoURL;
+    dl.download = fname;
+    dl.hidden = false;
+    /* 2) …the finished video in a real player, whose own menu (⋯)
+       offers Download on phones… */
+    var vf = $("vfile");
+    if (vf){
+      vf.src = videoURL;
+      vf.hidden = false;
+      $("vcanvas").hidden = true;
+    }
+    /* 3) …and Share/Save, the way phones actually save a video
+       (send it to WhatsApp, or save it to the device from the sheet) */
+    $("vshare").hidden = !shareFileSupported();
+    $("vnote").textContent = tt("vready");
+    $("vrec").disabled = false;
+    $("vplay").disabled = false;
+    dl.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  $("vrec").disabled = true;
+  $("vplay").disabled = true;
+  $("vdl").hidden = true;
+  $("vshare").hidden = true;
+  $("vnote").textContent = tt("vrecording");
+  rec.start(250);
+  playVideo(function(){ setTimeout(function(){ try { rec.stop(); } catch (e) {} }, 200); });
+}
+
+$("vplay").addEventListener("click", function(){ playVideo(); });
+$("vrec").addEventListener("click", recordVideo);
+$("vshare").addEventListener("click", function(){
+  if (!shareFileSupported()) return;
+  navigator.share({ files: [videoFile] }).catch(function(err){
+    /* the owner closed the share sheet — not an error; the
+       Download button is still right there */
+    if (err && err.name !== "AbortError") $("vnote").textContent = tt("vready");
+  });
+});
+$("btn-post-out").addEventListener("click", function(){
+  $("post-block").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+$("btn-video-out").addEventListener("click", function(){
+  /* "Make a video" now means MAKE THE FILE: it records right away,
+     so when it finishes the owner gets the download choice —
+     before, this only played the animation and the download
+     choice never appeared */
+  $("video-block").scrollIntoView({ behavior: "smooth", block: "start" });
+  recordVideo();
+});
+</script>
+
+<script>
+/* ---------------- confirm, consent, owner video, weekly updates ----------------
+   Business details live in ONE facts object, in memory only, for this
+   session. The owner confirms them before anything is generated, and
+   every output (post ES+EN, video, page, answers, week posts) is
+   rebuilt from that same object. Nothing is stored or sent anywhere. */
+var showPhone = false;        // consent: the number shows only if the owner says yes
+var primaryContact = "call";  // the ONE primary contact action on the page
+var confirmSnapshot = null;
+var pendingChange = null;
+var factsVersion = 0, postVersion = -1;
+var ownerVideoURL = "";       // the owner's own video file, session only
+
+function bumpFacts(){ factsVersion++; }
+
+/* facts rendered in a chosen language, whatever the screen language is */
+function viewFactsL(f, L){
+  if (L === lang) return viewFacts(f);
+  var cur = lang; lang = L;
+  var v = viewFacts(f);
+  lang = cur;
+  return v;
+}
+function altViewFacts(){ return viewFactsL(facts, lang === "es" ? "en" : "es"); }
+
+/* the shareable message: the post plus the page link's place, clearly
+   marked — there is no real public link yet, and none is faked */
+function buildShare(v){
+  var post = buildPostLang(v, lang);
+  var line = lang === "es"
+    ? "Mi página: [ENLACE — aquí irá el enlace de mi página cuando se publique]"
+    : "My page: [LINK — the link to my page will go here once it is published]";
+  return post + "\n" + line;
+}
+
+/* ---------------- the owner's own video (input chip) ---------------- */
+function ownerAttachHtml(){
+  if (isSample || !ownerVideoURL) return "";
+  return '<div style="margin-top:16px;"><h3 style="margin:0 0 8px;">'+esc(tt("ownvideo"))+'</h3>'+
+    '<video controls playsinline src="'+ownerVideoURL+'" style="width:100%;border-radius:12px;"></video>'+
+    '<p class="muted small">'+esc(tt("attachedpage"))+"</p></div>";
+}
+function renderOwnerVideo(){
+  var h = $("ownvideo-preview");
+  if (!h) return;
+  if (!ownerVideoURL){ h.innerHTML = ""; return; }
+  h.innerHTML = '<video controls playsinline src="'+ownerVideoURL+'" style="width:100%;border-radius:14px;margin-top:12px;"></video>'+
+    '<p class="muted small">'+esc(tt("ownvideonote"))+"</p>";
+}
+$("ownvideo-btn").addEventListener("click", function(){ $("ownvideo-in").click(); });
+$("ownvideo-in").addEventListener("change", function(){
+  if (this.files && this.files[0]){
+    if (ownerVideoURL){ try { URL.revokeObjectURL(ownerVideoURL); } catch (e) {} }
+    ownerVideoURL = URL.createObjectURL(this.files[0]);
+    renderOwnerVideo();
+    if (facts && !isSample) renderAll();
+  }
+});
+
+/* ---------------- CONFIRM screen ---------------- */
+function setCf(id, val){ var el = $(id); if (el) el.value = val || ""; }
+function syncContactUI(){
+  var inp = $("cf-phone");
+  var has = !!(((inp && inp.value) || "").trim() || (facts && facts.phone));
+  $("confirm-contact").hidden = !has;
+}
+function syncToggles(){
+  $("pc-call").classList.toggle("on", primaryContact === "call");
+  $("pc-wa").classList.toggle("on", primaryContact === "wa");
+  $("consent-yes").classList.toggle("on", showPhone);
+  $("consent-no").classList.toggle("on", !showPhone);
+}
+function renderConfirm(){
+  if (!facts) return;
+  var v = viewFacts(facts);
+  confirmSnapshot = v;
+  $("sample-banner-c").innerHTML = isSample
+    ? '<div class="missingbanner" style="background:var(--warn-soft);color:var(--warn);">'+esc(tt("samplebanner"))+"</div>" : "";
+  $("cf-trade").textContent = TRADES[facts.trade][lang].do;
+  setCf("cf-name", v.name); setCf("cf-city", v.city); setCf("cf-address", v.address);
+  setCf("cf-days", v.days); setCf("cf-hours", v.hours); setCf("cf-price", v.price);
+  setCf("cf-audience", v.audience); setCf("cf-mode", v.mode); setCf("cf-services", v.services);
+  setCf("cf-phone", v.phone);
+  $("tag-name").hidden = !!v.name;
+  $("tag-address").hidden = !!v.address;
+  $("tag-phone").hidden = !!v.phone;
+  syncContactUI();
+  syncToggles();
+}
+
+$("pc-call").addEventListener("click", function(){ primaryContact = "call"; syncToggles(); });
+$("pc-wa").addEventListener("click", function(){ primaryContact = "wa"; syncToggles(); });
+$("consent-yes").addEventListener("click", function(){ showPhone = true; syncToggles(); });
+$("consent-no").addEventListener("click", function(){ showPhone = false; syncToggles(); });
+$("cf-phone").addEventListener("input", syncContactUI);
+$("back-home2").addEventListener("click", function(){ showScreen("scr-home"); });
+$("mic-cf").addEventListener("click", function(){ toggleMic(this, $("cf-fix")); });
+$("go-cf-fix").addEventListener("click", function(){
+  var text = ($("cf-fix").value || "").trim();
+  if (!text || !facts) { $("cf-fix").focus(); return; }
+  var oldPhone = facts.phone;
+  facts = mergeFacts(facts, parseWords(text));
+  if (facts.phone !== oldPhone) showPhone = false;
+  $("cf-fix").value = "";
+  renderConfirm();
+});
+
+$("go-confirm").addEventListener("click", function(){
+  if (!facts) return;
+  var snap = confirmSnapshot || viewFacts(facts);
+  var alt = altViewFacts();
+  function applyField(key, clearKey, clearVal){
+    var el = $("cf-" + key); if (!el) return;
+    var val = el.value.trim();
+    if (val === (snap[key] || "") || val === (alt[key] || "")) return; /* unchanged in either language */
+    if (key === "price"){
+      var from = /^(desde|from)\s+/i.test(val);
+      facts.price = val.replace(/^(desde|from)\s+/i, "");
+      facts.priceFrom = from;
+      return;
+    }
+    facts[key] = val;
+    if (clearKey) facts[clearKey] = clearVal;
+  }
+  applyField("name"); applyField("city"); applyField("address");
+  applyField("days", "daysSpec", null); applyField("hours"); applyField("price");
+  applyField("audience", "audCodes", []); applyField("mode", "modeCode", "");
+  applyField("services"); applyField("phone");
+  bumpFacts();
+  renderAll();
+  showScreen("scr-result");
+});
+
+/* ---------------- hub: page action + re-confirm ---------------- */
+$("btn-page-out").addEventListener("click", function(){
+  $("page-block").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+$("go-reconfirm").addEventListener("click", function(){
+  renderConfirm();
+  showScreen("scr-confirm");
+});
+
+/* ---------------- copy the (possibly edited) outputs ---------------- */
+$("copy-post-es").addEventListener("click", function(){ copyText($("post-es").value, $("copy-note-es")); });
+$("copy-post-en").addEventListener("click", function(){ copyText($("post-en").value, $("copy-note-en")); });
+$("copy-share").addEventListener("click", function(){ copyText($("share-msg").value, $("copy-note-share")); });
+
+/* ---------------- "What changed this week?" ----------------
+   The owner states the change; the diff is shown BEFORE anything is
+   applied; on confirm, every output rebuilds from the updated facts. */
+$("mic-change").addEventListener("click", function(){ toggleMic(this, $("changebox")); });
+$("go-change").addEventListener("click", function(){
+  var text = ($("changebox").value || "").trim();
+  if (!text || !facts) { $("changebox").focus(); return; }
+  var merged = mergeFacts(facts, parseWords(text));
+  var cur = viewFacts(facts), nxt = viewFacts(merged);
+  var keys = ["name","city","address","days","hours","price","audience","mode","services","phone"];
+  var labels = { name:tt("fName"), city:tt("fCity"), address:tt("fAddress"), days:tt("fDays"),
+                 hours:tt("fHours"), price:tt("fPrice"), audience:tt("fWho"), mode:tt("fMode"),
+                 services:tt("fServices"), phone:tt("fPhone") };
+  var diffs = keys.filter(function(k){ return (cur[k] || "") !== (nxt[k] || ""); });
+  var host = $("change-diff");
+  if (!diffs.length){
+    pendingChange = null;
+    host.innerHTML = '<div class="missingbanner">'+esc(tt("nochanges"))+"</div>";
+    return;
+  }
+  pendingChange = merged;
+  host.innerHTML = diffs.map(function(k){
+    return '<div class="diffrow"><span class="difflabel">'+esc(labels[k])+'</span><br>'+
+      '<span class="diffold">'+esc(cur[k] || "—")+'</span> → <span class="diffnew">'+esc(nxt[k] || "—")+"</span></div>";
+  }).join("") +
+  '<div class="btnrow"><button class="btn smallbtn" type="button" id="apply-change">'+esc(tt("applybtn"))+'</button>'+
+  '<button class="btn smallbtn plain" type="button" id="cancel-change">'+esc(tt("cancelbtn"))+"</button></div>";
+  $("apply-change").addEventListener("click", function(){
+    var oldPhone = facts.phone;
+    facts = pendingChange; pendingChange = null;
+    if (facts.phone !== oldPhone) showPhone = false;
+    bumpFacts();
+    renderAll();
+    $("changebox").value = "";
+    host.innerHTML = '<div class="honest">'+esc(tt("changedone"))+"</div>";
+  });
+  $("cancel-change").addEventListener("click", function(){
+    pendingChange = null;
+    host.innerHTML = "";
+  });
+});
+</script>
+
+<script>
+/* ---------------- the rest of the week: 5 posts ---------------- */
+function buildWeek(f){
+  var tr = TRADES[f.trade][lang];
+  var name = f.name || tt("unnamed");
+  var posts = [];
+  if (lang==="es"){
+    posts.push("¡Buenos días de parte de "+name+"! "+tr.do+(f.city ? " en "+f.city : "")+"."+(f.days ? " Esta semana: "+f.days.toLowerCase()+(f.hours ? ", "+f.hours : "")+"." : "")+(f.phone ? " Escríbenos: "+f.phone+"." : ""));
+    posts.push((f.price ? "Precio claro, sin sorpresas: "+f.price+"." : "Precios claros, sin sorpresas — pregunta cuando llames.")+" "+name+(f.city ? ", "+f.city : "")+"."+(f.mode ? " "+f.mode+"." : ""));
+    posts.push((f.services ? "Esto es lo que hacemos en "+name+": "+f.services+"." : "En "+name+" te atendemos con calma y sin prisa.")+(f.audience ? " Para: "+f.audience+"." : "")+(f.phone ? " Llama o escribe: "+f.phone+"." : ""));
+    posts.push("¿Tienes un hueco esta semana? "+name+" te espera"+(f.days ? " — "+f.days.toLowerCase() : "")+(f.hours ? ", "+f.hours : "")+("." )+(f.mode ? " "+f.mode+"." : ""));
+    posts.push("Gracias a todos nuestros clientes de "+(f.city || "la zona")+". "+name+" sigue aquí para servirte."+(f.phone ? " Guarda nuestro número: "+f.phone+"." : ""));
+  } else {
+    posts.push("Good morning from "+name+"! "+tr.do+(f.city ? " in "+f.city : "")+"."+(f.days ? " This week: "+f.days+(f.hours ? ", "+f.hours : "")+"." : "")+(f.phone ? " Message us: "+f.phone+"." : ""));
+    posts.push((f.price ? "Clear price, no surprises: "+f.price+"." : "Clear prices, no surprises — just ask when you call.")+" "+name+(f.city ? ", "+f.city : "")+"."+(f.mode ? " "+f.mode+"." : ""));
+    posts.push((f.services ? "Here's what we do at "+name+": "+f.services+"." : "At "+name+" you get patient, unhurried service.")+(f.audience ? " For: "+f.audience+"." : "")+(f.phone ? " Call or message: "+f.phone+"." : ""));
+    posts.push("Have a gap in your week? "+name+" is here for you"+(f.days ? " — "+f.days : "")+(f.hours ? ", "+f.hours : "")+"." +(f.mode ? " "+f.mode+"." : ""));
+    posts.push("Thank you to all our customers in "+(f.city || "the area")+". "+name+" is here to serve you."+(f.phone ? " Save our number: "+f.phone+"." : ""));
+  }
+  return posts;
+}
+function renderWeek(){
+  var host = $("weeklist");
+  if (!facts){ host.innerHTML = '<p class="muted">'+esc(tt("needwords"))+"</p>"; return; }
+  var posts = buildWeek(viewFacts(facts));
+  host.innerHTML = "";
+  posts.forEach(function(p, i){
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = "<h3>"+esc(T[lang].daynames[i])+'</h3><div class="postbox" style="margin-top:0;">'+esc(p)+"</div>"+
+      '<button class="btn smallbtn" type="button" data-copyweek="'+i+'">'+esc(tt("copy"))+'</button> <span class="copied" id="week-copied-'+i+'" hidden>'+esc(tt("copied"))+"</span>";
+    host.appendChild(card);
+  });
+  host.querySelectorAll("[data-copyweek]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var i = btn.getAttribute("data-copyweek");
+      copyText(buildWeek(viewFacts(facts))[i], $("week-copied-"+i));
+    });
+  });
+}
+
+/* ---------------- the check (guided self-check) ---------------- */
+function checkItems(f){
+  var qs = questionsFor(f);
+  var picked = [];
+  var seen = {};
+  qs.forEach(function(item){
+    if (picked.length>=5) return;
+    if (seen[item.need]) return;
+    seen[item.need] = true;
+    picked.push(item);
+  });
+  while (picked.length<Math.min(5, qs.length) && picked.length<qs.length){
+    for (var i=0;i<qs.length;i++){ if (picked.indexOf(qs[i])<0){ picked.push(qs[i]); break; } }
+  }
+  return picked.slice(0,5);
+}
+function renderCheck(){
+  var host = $("checklist");
+  if (!facts){ host.innerHTML = '<p class="muted">'+esc(tt("needwords"))+"</p>"; $("check-summary").innerHTML=""; return; }
+  var items = checkItems(facts);
+  var v = viewFacts(facts);
+  host.innerHTML = "";
+  items.forEach(function(item, idx){
+    var st = checkState[idx];
+    var div = document.createElement("div");
+    div.className = "checkitem";
+    var body = '<div class="muted small">'+esc(tt("askphone"))+'</div><div class="askline">“'+esc(item.q())+'”</div>'+
+      '<div class="toggle2"><button type="button" class="yes'+(st==="yes"?" on":"")+'" data-chk="'+idx+'" data-val="yes">'+esc(tt("yes"))+'</button>'+
+      '<button type="button" class="no'+(st==="no"?" on":"")+'" data-chk="'+idx+'" data-val="no">'+esc(tt("no"))+"</button></div>";
+    if (st==="no"){
+      if (v[item.need]){
+        body += '<div class="addline">'+esc(tt("addthisline"))+"<br>“"+esc(item.a(v))+"”"+
+          '<br><button class="btn smallbtn" type="button" data-copyl="'+idx+'">'+esc(tt("copyshort"))+'</button> <span class="copied" id="chk-copied-'+idx+'" hidden>'+esc(tt("copied"))+"</span></div>";
+      } else {
+        body += '<div class="addline">'+esc(tt("firstadd"))+"</div>";
+      }
+    }
+    div.innerHTML = body;
+    host.appendChild(div);
+  });
+  host.querySelectorAll("[data-chk]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      checkState[btn.getAttribute("data-chk")] = btn.getAttribute("data-val");
+      renderCheck();
+    });
+  });
+  host.querySelectorAll("[data-copyl]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var idx = btn.getAttribute("data-copyl");
+      var items2 = checkItems(facts);
+      copyText(items2[idx].a(viewFacts(facts)), $("chk-copied-"+idx));
+    });
+  });
+  /* summary */
+  var items3 = checkItems(facts), total = items3.length, yes = 0, marked = 0;
+  Object.keys(checkState).forEach(function(k){ if (parseInt(k,10)<total){ marked++; if (checkState[k]==="yes") yes++; } });
+  var sum = $("check-summary");
+  if (marked===0) sum.innerHTML = '<p class="muted">'+esc(tt("summarynone"))+"</p>";
+  else if (marked===total && yes===total) sum.innerHTML = '<div class="honest">'+esc(tt("summaryall"))+"</div>";
+  else if (marked>0) sum.innerHTML = '<div class="honest">'+esc(tt("summarysome1"))+yes+esc(tt("summarysome2"))+marked+esc(tt("summarysome3"))+"</div>";
+}
+
+/* ---------------- copy helper ---------------- */
+function copyText(text, noteEl){
+  function done(){ if (noteEl){ noteEl.hidden = false; setTimeout(function(){ noteEl.hidden = true; }, 2200); } }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, function(){ fallback(); });
+  } else fallback();
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta); done();
+  }
+}
+
+/* ---------------- listen (text-to-speech) ---------------- */
+function speak(){
+  if (!("speechSynthesis" in window)){ $("listen-note").textContent = tt("micnomic"); return; }
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(speakText());
+  u.lang = (lang==="es" ? "es-US" : "en-US");
+  u.rate = 0.95;
+  var voices = window.speechSynthesis.getVoices();
+  for (var i=0;i<voices.length;i++){
+    if (voices[i].lang && voices[i].lang.toLowerCase().indexOf(lang)===0){ u.voice = voices[i]; break; }
+  }
+  $("listen-note").textContent = tt("listennote");
+  window.speechSynthesis.speak(u);
+}
+if ("speechSynthesis" in window){ window.speechSynthesis.getVoices(); }
+
+/* ---------------- talk (speech recognition, optional) ---------------- */
+var recog = null, recogTarget = null, recogBtn = null;
+function toggleMic(btn, target){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR){
+    if (target===$("saybox")) $("mic-note").textContent = tt("micnomic");
+    return;
+  }
+  if (recog){ try { recog.stop(); } catch(e){} return; }
+  recog = new SR();
+  recog.lang = (lang==="es" ? "es-US" : "en-US");
+  recog.interimResults = true;
+  recogTarget = target; recogBtn = btn;
+  btn.classList.add("listening");
+  if (target===$("saybox")) $("mic-note").textContent = tt("miclistening");
+  var base = target.value ? target.value + " " : "";
+  recog.onresult = function(ev){
+    var txt = "";
+    for (var i=0;i<ev.results.length;i++) txt += ev.results[i][0].transcript;
+    target.value = base + txt;
+  };
+  recog.onend = function(){
+    recog = null; if (recogBtn) recogBtn.classList.remove("listening");
+    if (target===$("saybox")) $("mic-note").textContent = tt("michint");
+  };
+  recog.onerror = function(){
+    recog = null; if (recogBtn) recogBtn.classList.remove("listening");
+    if (target===$("saybox")) $("mic-note").textContent = tt("micnomic");
+  };
+  try { recog.start(); } catch(e){ recog = null; btn.classList.remove("listening"); }
+}
+
+/* ---------------- wiring ---------------- */
+$("lang-es").addEventListener("click", function(){ lang = "es"; applyLang(); });
+$("lang-en").addEventListener("click", function(){ lang = "en"; applyLang(); });
+
+$("go-make").addEventListener("click", function(){
+  var text = ($("saybox").value || "").trim();
+  facts = parseWords(text);
+  isSample = false;
+  currentSample = null;
+  checkState = {};
+  showPhone = false; primaryContact = "call"; pendingChange = null;
+  bumpFacts();
+  renderConfirm();
+  showScreen("scr-confirm");
+});
+
+$("mic-main").addEventListener("click", function(){ toggleMic(this, $("saybox")); });
+$("mic-fix").addEventListener("click", function(){ toggleMic(this, $("fixbox")); });
+
+$("go-fix").addEventListener("click", function(){
+  var text = ($("fixbox").value || "").trim();
+  if (!text || !facts){ $("fixbox").focus(); return; }
+  var extra = parseWords(text);
+  var oldPhone = facts.phone;
+  facts = mergeFacts(facts, extra);
+  if (facts.phone !== oldPhone) showPhone = false;
+  bumpFacts();
+  $("fixbox").value = "";
+  renderAll();
+});
+
+$("listen-btn").addEventListener("click", speak);
+/* the post copy buttons (ES / EN / share) are wired with the confirm code below */
+
+$("back-home").addEventListener("click", function(){ showScreen("scr-home"); });
+$("go-check").addEventListener("click", function(){ renderCheck(); showScreen("scr-check"); });
+$("go-week").addEventListener("click", function(){ renderWeek(); showScreen("scr-week"); });
+$("back-result1").addEventListener("click", function(){ showScreen("scr-result"); });
+$("back-result2").addEventListener("click", function(){ showScreen("scr-result"); });
+
+applyLang();
+</script>
+
+<script>
+/* MNQ is a literal formatter: it never calls the local-business parser. */
+(function(){
+  var strings={
+    en:{title:'MNQ snapshot → X posts',intro:'Paste the snapshot and each post separately. Your text and numbers stay verbatim; long text becomes a numbered thread.',honest:'Local formatting only. No live data, AI analysis, chart reading, translation or publishing. Paste chart descriptions as text. Review each thread together with its snapshot before sharing.',snapshot:'Market snapshot (optional)',structure:'Keep Context → Location → Trigger → Risk in your source text. Missing facts are never invented. Nothing is saved after this page closes.',post:'Post',add:'Add another post',chart:'Chart description (optional text)',make:'Prepare X threads',empty:'Paste a snapshot, a post or a chart description first.',stale:'Inputs changed. Prepare the threads again.',done:'Threads ready. Copy each part in order. Review live prices and your risk first.',copy:'Copy',copied:'Copied.',failed:'Copy failed. Select and copy the text manually.',caution:'Approx./delayed; verify live. Educational only. Risk first.',part:'part'},
+    es:{title:'Resumen MNQ → posts para X',intro:'Pega el resumen y cada post por separado. Tu texto y tus números se conservan literalmente; el texto largo se divide en un hilo numerado.',honest:'Formato local solamente. Sin datos en vivo, análisis de IA, lectura de gráficos, traducción ni publicación. Pega las descripciones de gráficos como texto. Revisa cada hilo junto con su resumen antes de compartir.',snapshot:'Resumen del mercado (opcional)',structure:'Conserva Contexto → Ubicación → Disparador → Riesgo en tu texto. No se inventan datos faltantes. Nada se guarda al cerrar esta página.',post:'Post',add:'Agregar otro post',chart:'Descripción del gráfico (texto opcional)',make:'Preparar hilos para X',empty:'Pega un resumen, un post o una descripción primero.',stale:'Cambió el texto. Prepara los hilos otra vez.',done:'Hilos listos. Copia cada parte en orden. Verifica precios en vivo y tu riesgo primero.',copy:'Copiar',copied:'Copiado.',failed:'No se pudo copiar. Selecciona y copia el texto manualmente.',caution:'Aprox./retrasado; verifica en vivo. Solo educativo. Riesgo primero.',part:'parte'}
+  };
+  var count=0;
+  function t(k){return strings[lang][k];}
+  function invalidate(){ $('mnq-outputs').replaceChildren(); $('mnq-status').textContent=t('stale'); }
+  function translate(){
+    document.querySelectorAll('[data-mnq]').forEach(function(el){el.textContent=t(el.dataset.mnq);});
+    document.querySelectorAll('[data-mnq-post]').forEach(function(el){el.textContent=t('post')+' '+el.dataset.mnqPost;});
+    invalidate();
+  }
+  function addPost(){
+    count++;
+    var box=document.createElement('div'),label=document.createElement('label'),input=document.createElement('textarea');
+    label.htmlFor=input.id='mnq-post-'+count;
+    label.dataset.mnqPost=count; label.textContent=t('post')+' '+count;
+    input.spellcheck=false; input.className='mnq-source';
+    box.append(label,input); $('mnq-inputs').append(box); input.focus(); invalidate();
+  }
+  // Keep every source character, including whitespace, in order. Never cut a token.
+  function weight(text){return Array.from(text).reduce(function(n,c){return n+(c.codePointAt(0)>4351?2:1);},0);}
+  function chunks(text){
+    var units=text.match(/\s+|\S+/gu)||[],out=[],current='';
+    units.forEach(function(unit){
+      if(weight(unit)>150) throw new Error(lang==='es'?'Hay un bloque sin espacios demasiado largo; agrega espacios antes de preparar.':'A block without spaces is too long; add spaces before preparing.');
+      if(weight(current+unit)>150){out.push(current);current='';}
+      current+=unit;
+    });
+    if(current)out.push(current);
+    return out;
+  }
+  $('mode-mnq').onclick=function(){showScreen('scr-mnq');$('mode-mnq').setAttribute('aria-pressed','true');$('mode-shop').setAttribute('aria-pressed','false');};
+  $('mode-shop').onclick=function(){showScreen('scr-home');$('mode-shop').setAttribute('aria-pressed','true');$('mode-mnq').setAttribute('aria-pressed','false');};
+  $('mnq-add').onclick=addPost;
+  $('mnq-form').addEventListener('input',invalidate);
+  ['lang-es','lang-en'].forEach(function(id){$(id).addEventListener('click',translate);});
+  $('mnq-form').onsubmit=function(event){
+    event.preventDefault();$('mnq-outputs').replaceChildren();
+    var sources=[{name:t('snapshot'),text:$('mnq-snapshot').value}];
+    document.querySelectorAll('.mnq-source').forEach(function(el,i){sources.push({name:t('post')+' '+(i+1),text:el.value});});
+    sources.push({name:t('chart'),text:$('mnq-chart').value});
+    sources=sources.filter(function(s){return s.text.trim();});
+    if(!sources.length){$('mnq-status').textContent=t('empty');return;}
+    var prepared;
+    try{prepared=sources.map(function(s){return {name:s.name,parts:chunks(s.text)};});}
+    catch(error){$('mnq-status').textContent=error.message;return;}
+    prepared.forEach(function(s){
+      var card=document.createElement('div'),heading=document.createElement('h2');card.className='card';heading.textContent=s.name;card.append(heading);
+      s.parts.forEach(function(part,i){
+        var label=document.createElement('label'),output=document.createElement('textarea'),button=document.createElement('button'),note=document.createElement('span');
+        output.id='mnq-out-'+$('mnq-outputs').childElementCount+'-'+i;
+        label.htmlFor=output.id;label.textContent=t('part')+' '+(i+1)+' / '+s.parts.length;
+        // Body is exact source; framing is explicitly separate.
+        output.value='MNQ · '+(i+1)+'/'+s.parts.length+'\n'+part+'\n\n'+t('caution');
+        output.readOnly=true;output.rows=7;output.dataset.source=part;
+        button.type='button';button.className='btn ghost';button.textContent=t('copy');note.setAttribute('role','status');
+        button.onclick=async function(){
+          try{await navigator.clipboard.writeText(output.value);note.textContent=t('copied');}
+          catch(error){output.focus();output.select();note.textContent=t('failed');}
+        };
+        card.append(label,output,button,note);
+      });
+      $('mnq-outputs').append(card);
+    });
+    $('mnq-status').textContent=t('done');
+  };
+  addPost();translate();$('mnq-status').textContent='';
+})();
+</script>
+  </body>
+</html>
