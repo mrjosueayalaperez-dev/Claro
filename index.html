@@ -223,10 +223,32 @@
         <button id="mode-shop" type="button" aria-pressed="true">Negocio local / Local shop</button>
         <button id="mode-mnq" type="button" aria-pressed="false">MNQ · X posts</button>
       </nav>
+      <button class="btn" id="open-3d" type="button" style="margin-bottom:18px;width:100%;font-size:1.15em" data-c3="open">Crear un video 3D</button>
+      <section id="scr-3d" hidden class="card" style="margin-bottom:20px">
+        <h2 data-c3="title">Crear un video 3D</h2>
+        <p class="muted small"><strong data-c3="effect">Efecto de profundidad 3D</strong> — <span data-c3="note">animación local y sin sonido. Las escenas generadas totalmente con IA requieren un servicio de video compatible (no conectado).</span></p>
+        <label for="c3-text" data-c3="textl">Tu texto</label>
+        <textarea id="c3-text" rows="3"></textarea>
+        <div class="btnrow">
+          <button class="btn smallbtn ghost" id="c3-mic" type="button" data-c3="mic">🎤 Dictar</button>
+          <button class="btn smallbtn ghost" id="c3-photo-btn" type="button" data-c3="photo">Foto</button>
+          <input type="file" id="c3-photo" accept="image/*" hidden />
+        </div>
+        <p class="muted small" id="c3-note" role="status"></p>
+        <div class="videoframe"><canvas id="c3-canvas" width="720" height="1280"></canvas><video id="c3-video" controls playsinline hidden></video></div>
+        <div class="btnrow">
+          <button class="btn smallbtn ghost" id="c3-preview" type="button" data-c3="preview">Vista previa</button>
+          <button class="btn smallbtn" id="c3-rec" type="button" data-c3="rec">Grabar video</button>
+          <a class="btn smallbtn" id="c3-dl" href="#" download="video-3d.webm" hidden data-c3="dl">Descargar</a>
+          <button class="btn smallbtn" id="c3-share" type="button" hidden data-c3="share">Compartir</button>
+          <button class="btn smallbtn ghost" id="c3-close" type="button" data-c3="close">Cerrar</button>
+        </div>
+      </section>
       <section id="scr-mnq" hidden>
         <h1 data-mnq="title"></h1>
         <p data-mnq="intro"></p>
         <p class="honest" data-mnq="honest"></p>
+        <p class="muted small" id="mnq-risk"><strong>Futures trading involves substantial risk of loss and is not suitable for all investors. This is education and structured practice, not financial advice. Past performance is not indicative of future results.</strong><br>El trading de futuros implica un riesgo sustancial de pérdida y no es adecuado para todos los inversionistas. Esto es educación y práctica estructurada, no asesoría financiera. Los resultados pasados no garantizan resultados futuros.</p>
         <form id="mnq-form">
           <label for="mnq-snapshot" data-mnq="snapshot"></label>
           <textarea id="mnq-snapshot" rows="5" spellcheck="false"></textarea>
@@ -383,10 +405,12 @@
           <div class="btnrow">
             <button class="btn smallbtn" id="vrec" type="button" data-i18n="vrec">Crear el video para descargar</button>
             <button class="btn smallbtn ghost" id="vplay" type="button" data-i18n="vplay">Ver el video</button>
+            <button class="btn smallbtn ghost" id="vdepth" type="button" aria-pressed="false">Efecto 3D / 3D depth: off</button>
             <a class="btn smallbtn" id="vdl" href="#" download="mi-negocio.webm" hidden data-i18n="vdl">Descargar el video</a>
             <button class="btn smallbtn" id="vshare" type="button" hidden data-i18n="vshare">Compartir o guardar el video</button>
           </div>
           <p class="muted small" id="vnote"></p>
+          <p class="muted small">Efecto 3D: animación local, sin sonido; no genera escenas con IA (eso requiere conectar un servicio de video). / 3D effect: local, silent animation; it does not create AI-generated scenes (that needs a video service connected).</p>
         </div>
 
         <hr class="divider" />
@@ -445,6 +469,79 @@
 
     </div>
 
+<script>
+/* inlined copy of depth3d.js so index.html stays a single self-contained file */
+/* depth3d.js — self-contained, silent 3D depth / parallax renderer for <canvas>.
+   No dependencies, no network, no audio, no credentials.
+   Usage:
+     Depth3D.enabled = true;
+     Depth3D.render(ctx, function(offCtx){ ...draw your flat frame... }, timeMs);
+   The flat frame is drawn to an offscreen canvas, then composited onto ctx
+   with a drifting perspective tilt, layered parallax particles, a depth
+   shadow and a vignette. Because it draws onto the same canvas, anything
+   captured via canvas.captureStream()/MediaRecorder includes the effect.
+   This is a procedural visual effect only — it does not generate scenes. */
+(function(root){
+  var off = null, stars = null;
+  function rand(i){ var x = Math.sin(i * 9301 + 49297) * 233280; return x - Math.floor(x); }
+  function ensure(W, H){
+    if (!off || off.width !== W || off.height !== H){
+      off = document.createElement("canvas"); off.width = W; off.height = H;
+    }
+    if (!stars){
+      stars = [];
+      for (var i = 0; i < 90; i++) stars.push({ x: rand(i), y: rand(i + 500), z: 0.2 + rand(i + 900) * 0.8 });
+    }
+    return off.getContext("2d");
+  }
+  var D = {
+    enabled: false,
+    strength: 1,            // 0..2 intensity
+    render: function(ctx, drawFlat, t){
+      var W = ctx.canvas.width, H = ctx.canvas.height;
+      if (!D.enabled){ drawFlat(ctx); return; }
+      var o = ensure(W, H);
+      o.setTransform(1, 0, 0, 1, 0, 0); o.globalAlpha = 1; o.clearRect(0, 0, W, H);
+      drawFlat(o);
+      var s = D.strength, k = (t || 0) / 1000;
+      var ax = Math.sin(k * 0.9) * 0.06 * s, ay = Math.cos(k * 0.7) * 0.04 * s;
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+      // back layer: blurred, enlarged copy of the frame (far plane)
+      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 0.55;
+      try { ctx.filter = "blur(18px)"; } catch (e) {}
+      ctx.drawImage(off, -W * 0.1 - ax * W, -H * 0.1 - ay * H, W * 1.2, H * 1.2);
+      try { ctx.filter = "none"; } catch (e) {}
+      // mid layer: parallax particles at varying depth
+      for (var i = 0; i < stars.length; i++){
+        var p = stars[i];
+        var x = ((p.x + ax * p.z * 3 + k * 0.01 * p.z) % 1 + 1) % 1 * W;
+        var y = ((p.y + ay * p.z * 3) % 1 + 1) % 1 * H;
+        ctx.globalAlpha = 0.15 + p.z * 0.45;
+        ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.arc(x, y, 1 + p.z * 3, 0, Math.PI * 2); ctx.fill();
+      }
+      // front layer: the frame on a tilted card (pseudo-perspective via skew/scale)
+      ctx.globalAlpha = 1;
+      ctx.translate(W / 2, H / 2);
+      ctx.transform(1 - Math.abs(ax) * 0.6, ay * 0.5, ax * 0.5, 1 - Math.abs(ay) * 0.6, 0, 0);
+      var sc = 0.9;
+      ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 40;
+      ctx.shadowOffsetX = -ax * 300; ctx.shadowOffsetY = 20 - ay * 300;
+      ctx.drawImage(off, -W * sc / 2, -H * sc / 2, W * sc, H * sc);
+      ctx.shadowColor = "transparent";
+      // specular sheen that moves with the tilt
+      var g = ctx.createLinearGradient(-W / 2 + ax * W * 4, -H / 2, W / 2 + ax * W * 4, H / 2);
+      g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.5, "rgba(255,255,255,0.08)"); g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g; ctx.fillRect(-W * sc / 2, -H * sc / 2, W * sc, H * sc);
+      ctx.restore();
+    }
+  };
+  root.Depth3D = D;
+})(typeof window !== "undefined" ? window : this);
+
+</script>
 <script>
 "use strict";
 /* ============================================================
@@ -1484,6 +1581,9 @@ function drawCover(ctx, img, x, y, w, h){
 }
 
 function drawScene(ctx, sc, alpha, lift){
+  if (window.Depth3D && Depth3D.enabled && !ctx.__flat){
+    return Depth3D.render(ctx, function(c){ c.__flat = true; drawScene(c, sc, alpha, lift); }, performance.now());
+  }
   var W = 720, H = 1280, pal = vidPalette();
   ctx.globalAlpha = 1;
   ctx.fillStyle = pal.bg; ctx.fillRect(0, 0, W, H);
@@ -1644,6 +1744,12 @@ function recordVideo(){
 }
 
 $("vplay").addEventListener("click", function(){ playVideo(); });
+$("vdepth").addEventListener("click", function(){
+  Depth3D.enabled = !Depth3D.enabled;
+  this.setAttribute("aria-pressed", String(Depth3D.enabled));
+  this.textContent = "Efecto 3D / 3D depth: " + (Depth3D.enabled ? "on" : "off");
+  if (!vid.playing && vid.scenes && vid.scenes.length) drawScene($("vcanvas").getContext("2d"), vid.scenes[0], 1, 0);
+});
 $("vrec").addEventListener("click", recordVideo);
 $("vshare").addEventListener("click", function(){
   if (!shareFileSupported()) return;
@@ -2136,6 +2242,59 @@ applyLang();
     $('mnq-status').textContent=t('done');
   };
   addPost();translate();$('mnq-status').textContent='';
+})();
+</script>
+
+<script>
+/* "Create a 3D Video" creator: text / voice / photo -> Depth3D preview -> record -> download / share */
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var T={es:{open:"🎬 Crear un video 3D",title:"Crear un video 3D",effect:"Efecto de profundidad 3D",note:"animación local y sin sonido. Las escenas generadas totalmente con IA requieren un servicio de video compatible (no conectado).",textl:"Tu texto",mic:"🎤 Dictar",photo:"Foto",preview:"Vista previa",rec:"Grabar video",dl:"Descargar",share:"Compartir",close:"Cerrar",nomic:"El dictado por voz no está disponible en este navegador; escribe el texto.",listening:"Escuchando…",recording:"Grabando…",ready:"Video listo: descárgalo o compártelo.",norec:"Este navegador no puede grabar video; la vista previa sí funciona.",empty:"Escribe, dicta o sube una foto primero."},
+         en:{open:"🎬 Create a 3D Video",title:"Create a 3D Video",effect:"3D depth effect",note:"local, silent animation. Fully AI-generated scenes require a supported video service (not connected).",textl:"Your text",mic:"🎤 Dictate",photo:"Photo",preview:"Preview",rec:"Record video",dl:"Download",share:"Share",close:"Close",nomic:"Voice dictation isn't available in this browser; type your text instead.",listening:"Listening…",recording:"Recording…",ready:"Video ready: download or share it.",norec:"This browser can't record video; preview still works.",empty:"Type, dictate or upload a photo first."}};
+  function L(){ return (typeof lang!=="undefined" && lang==="en") ? "en" : "es"; }
+  function t(k){ return T[L()][k]; }
+  function apply(){ document.querySelectorAll("[data-c3]").forEach(function(el){ el.textContent=t(el.dataset.c3); }); }
+  $("lang-es").addEventListener("click", apply); $("lang-en").addEventListener("click", apply); apply();
+  var photo=null, raf=0, blob=null, url="", file=null;
+  $("open-3d").onclick=function(){ $("scr-3d").hidden=false; $("scr-3d").scrollIntoView({block:"start"}); draw(0); };
+  $("c3-close").onclick=function(){ $("scr-3d").hidden=true; cancelAnimationFrame(raf); };
+  $("c3-photo-btn").onclick=function(){ $("c3-photo").click(); };
+  $("c3-photo").onchange=function(){ var f=this.files&&this.files[0]; if(!f) return; var im=new Image(); im.onload=function(){ photo=im; draw(0); }; im.src=URL.createObjectURL(f); };
+  $("c3-mic").onclick=function(){
+    var R=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!R){ $("c3-note").textContent=t("nomic"); return; }
+    try{ var r=new R(); r.lang=L()==="es"?"es-US":"en-US"; r.onresult=function(e){ $("c3-text").value=(($("c3-text").value+" ")+e.results[0][0].transcript).trim(); draw(0); $("c3-note").textContent=""; };
+      r.onerror=function(){ $("c3-note").textContent=t("nomic"); }; r.start(); $("c3-note").textContent=t("listening"); }catch(e){ $("c3-note").textContent=t("nomic"); }
+  };
+  function wrap(ctx,txt,max){ var w=txt.split(/\s+/),lines=[],cur=""; w.forEach(function(x){ var n=cur?cur+" "+x:x; if(ctx.measureText(n).width>max&&cur){lines.push(cur);cur=x;} else cur=n; }); if(cur)lines.push(cur); return lines.slice(0,8); }
+  function flat(ctx,p){
+    var W=720,H=1280; ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha=1;
+    var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#1d2b64"); g.addColorStop(1,"#0b0f1f"); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    if(photo){ var s=Math.max(600/photo.width,640/photo.height),dw=photo.width*s,dh=photo.height*s; ctx.save(); ctx.beginPath(); ctx.rect(60,90,600,640); ctx.clip(); ctx.drawImage(photo,360-dw/2,410-dh/2,dw,dh); ctx.restore(); }
+    ctx.fillStyle="#fff"; ctx.textAlign="center"; ctx.textBaseline="top"; ctx.font="800 64px system-ui,sans-serif";
+    var lines=wrap(ctx,$("c3-text").value||"",600), y=photo?780:Math.max(200,(H-lines.length*76)/2);
+    ctx.globalAlpha=Math.min(1,p*4+0.2); lines.forEach(function(l){ ctx.fillText(l,W/2,y); y+=76; });
+  }
+  function draw(p){ var ctx=$("c3-canvas").getContext("2d"); Depth3D.render(ctx,function(c){flat(c,p);},performance.now()); }
+  function animate(ms,done){ cancelAnimationFrame(raf); var st=null; $("c3-canvas").hidden=false; $("c3-video").hidden=true;
+    var was=Depth3D.enabled; Depth3D.enabled=true;
+    (function f(ts){ if(!st)st=ts; var e=ts-st; draw(Math.min(1,e/ms)); if(e<ms) raf=requestAnimationFrame(f); else { Depth3D.enabled=was; if(done)done(); } })(performance.now()); }
+  function hasInput(){ if(!$("c3-text").value.trim()&&!photo){ $("c3-note").textContent=t("empty"); return false; } return true; }
+  $("c3-preview").onclick=function(){ if(hasInput()) animate(4000); };
+  $("c3-rec").onclick=function(){
+    if(!hasInput()) return; var c=$("c3-canvas");
+    if(!c.captureStream||typeof MediaRecorder==="undefined"){ $("c3-note").textContent=t("norec"); animate(4000); return; }
+    var mime=["video/mp4","video/webm;codecs=vp9","video/webm"].filter(function(m){return MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m);})[0]||"";
+    var rec; try{ rec=new MediaRecorder(c.captureStream(30),mime?{mimeType:mime}:{}); }catch(e){ $("c3-note").textContent=t("norec"); return; }
+    var ch=[]; rec.ondataavailable=function(e){ if(e.data&&e.data.size) ch.push(e.data); };
+    rec.onstop=function(){ blob=new Blob(ch,{type:(rec.mimeType||mime||"video/webm").split(";")[0]}); if(url)URL.revokeObjectURL(url); url=URL.createObjectURL(blob);
+      var fn="video-3d"+(blob.type.indexOf("mp4")>=0?".mp4":".webm"); try{file=new File([blob],fn,{type:blob.type});}catch(e){file=null;}
+      $("c3-dl").href=url; $("c3-dl").download=fn; $("c3-dl").hidden=false; $("c3-video").src=url; $("c3-video").hidden=false; c.hidden=true;
+      $("c3-share").hidden=!(file&&navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})); $("c3-note").textContent=t("ready"); $("c3-rec").disabled=false; window.__c3blob=blob; };
+    $("c3-rec").disabled=true; $("c3-dl").hidden=true; $("c3-note").textContent=t("recording"); rec.start(250);
+    animate(5000,function(){ setTimeout(function(){ rec.stop(); },200); });
+  };
+  $("c3-share").onclick=function(){ if(file) navigator.share({files:[file]}).catch(function(){}); };
 })();
 </script>
   </body>
