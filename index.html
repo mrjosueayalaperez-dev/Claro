@@ -378,7 +378,7 @@
         <div id="video-block">
           <hr class="divider" />
           <h2 data-i18n="videoh">Tu video</h2>
-          <p class="muted" data-i18n="videop">El mismo contenido de tu página, como un video vertical corto con tus datos exactos — sin nada inventado. Toca «Crear el video para descargar» y al terminar tú eliges: descargarlo a tu teléfono o compartirlo.</p>
+          <p class="muted" data-i18n="videop">El mismo contenido de tu página, como un video vertical corto con tus datos exactos — sin nada inventado. Toca «Crear el video para descargar» y al terminar tú eliges: descargarlo a tu teléfono o compartirlo. Si agregaste una foto, se mueve con un suave efecto de profundidad 3D: tu propia foto y tus palabras, con profundidad, hecho en este teléfono.</p>
           <div class="videoframe"><canvas id="vcanvas" width="720" height="1280"></canvas><video id="vfile" controls playsinline hidden></video></div>
           <div class="btnrow">
             <button class="btn smallbtn" id="vrec" type="button" data-i18n="vrec">Crear el video para descargar</button>
@@ -538,7 +538,7 @@ var T = {
     seemore:"Ver más",
     postout:"Crear un post", videoout:"Crear un video",
     videoh:"Tu video",
-    videop:"El mismo contenido de tu página, como un video vertical corto con tus datos exactos — sin nada inventado. Toca «Crear el video para descargar» y al terminar tú eliges: descargarlo a tu teléfono o compartirlo.",
+    videop:"El mismo contenido de tu página, como un video vertical corto con tus datos exactos — sin nada inventado. Toca «Crear el video para descargar» y al terminar tú eliges: descargarlo a tu teléfono o compartirlo. Si agregaste una foto, se mueve con un suave efecto de profundidad 3D: tu propia foto y tus palabras, con profundidad, hecho en este teléfono.",
     vplay:"Ver el video", vrec:"Crear el video para descargar", vdl:"Descargar el video",
     vshare:"Compartir o guardar el video",
     vOpen:"Abierto",
@@ -653,7 +653,7 @@ var T = {
     seemore:"See more",
     postout:"Create a post", videoout:"Create a video",
     videoh:"Your video",
-    videop:"The same content as your page, as a short vertical video with your exact facts — nothing invented. Tap “Create the video to download” and when it finishes you choose: download it to your phone or share it.",
+    videop:"The same content as your page, as a short vertical video with your exact facts — nothing invented. Tap “Create the video to download” and when it finishes you choose: download it to your phone or share it. If you added a photo, it moves with a gentle 3D depth effect: your own photo and words, given depth, made on this phone.",
     vplay:"Play the video", vrec:"Create the video to download", vdl:"Download the video",
     vshare:"Share or save the video",
     vOpen:"Open",
@@ -1383,7 +1383,10 @@ $("link-in").addEventListener("change", function(){
    TEXT LAW: every line on screen is one of the owner's own facts —
    no filler lines, no repeats, no truncated words, no empty boxes.
    A scene exists only when its fact exists. Silent: the text IS
-   the caption. Nothing is uploaded; the file is made in the browser. */
+   the caption. Nothing is uploaded; the file is made in the browser.
+   Photo scenes carry a 3D depth effect: the owner's own photo is
+   drawn in two layers that drift at different rates (see
+   drawPhotoDepth) — an on-device effect, not AI-generated footage. */
 var SCENE_MS = 4000;
 var vid = { scenes: [], playing: false, raf: 0 };
 var videoBlob = null, videoURL = "", videoFile = null;
@@ -1482,8 +1485,38 @@ function drawCover(ctx, img, x, y, w, h){
   ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
   ctx.restore();
 }
+/* cover-draw with a horizontal/vertical offset and an extra zoom —
+   the building block for the two depth layers below */
+function drawCoverP(ctx, img, x, y, w, h, ox, oy, zoom){
+  var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+  var scale = Math.max(w / iw, h / ih) * (zoom || 1);
+  var dw = iw * scale, dh = ih * scale;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.drawImage(img, x + (w - dw) / 2 + (ox || 0), y + (h - dh) / 2 + (oy || 0), dw, dh);
+  ctx.restore();
+}
+/* 3D depth for a photo scene: the same photo twice, at two rates.
+   Background layer — an overscanned, dimmed halo of the photo that
+   drifts slowly (+8 → −8 px across the scene). Foreground layer —
+   the sharp photo in its frame, drifting the other way and faster
+   (−15 → +15 px) with a slow push-in (zoom 1.00 → 1.07). The fact
+   text band keeps its own entry lift, a third rate. drawScene is
+   the one frame function behind both the preview and the recorder,
+   so the downloaded file holds exactly this effect. */
+function drawPhotoDepth(ctx, img, p, pal){
+  drawCoverP(ctx, img, 26, 46, 668, 768, (0.5 - p) * 16, 0, 1);
+  ctx.save();
+  ctx.globalAlpha *= 0.45;
+  ctx.fillStyle = pal.bg;
+  ctx.fillRect(26, 46, 668, 768);
+  ctx.restore();
+  drawCoverP(ctx, img, 60, 80, 600, 700, (p - 0.5) * 30, 0, 1 + 0.07 * p);
+}
 
-function drawScene(ctx, sc, alpha, lift){
+function drawScene(ctx, sc, alpha, lift, p){
+  if (p === undefined || p === null) p = 1; /* static draws (poster, final frame) show the settled depth state */
   var W = 720, H = 1280, pal = vidPalette();
   ctx.globalAlpha = 1;
   ctx.fillStyle = pal.bg; ctx.fillRect(0, 0, W, H);
@@ -1495,7 +1528,7 @@ function drawScene(ctx, sc, alpha, lift){
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   if (sc.photo){
-    drawCover(ctx, sc.photo, 60, 80, 600, 700);
+    drawPhotoDepth(ctx, sc.photo, p, pal);
     var y = 830;
     y += drawKicker(ctx, sc.kicker, W / 2, y, pal) + 14;
     y += drawTitle(ctx, sc.title, W / 2, y, pal, 80);
@@ -1518,7 +1551,7 @@ function drawScene(ctx, sc, alpha, lift){
 function drawSceneAt(ctx, idx, p){
   var alpha = p < 0.12 ? p / 0.12 : 1;
   var lift = (1 - Math.min(1, p / 0.18)) * 26;
-  drawScene(ctx, vid.scenes[idx], alpha, lift);
+  drawScene(ctx, vid.scenes[idx], alpha, lift, p);
 }
 
 function stopVideo(){
