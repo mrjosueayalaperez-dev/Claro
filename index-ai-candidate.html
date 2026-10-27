@@ -223,8 +223,18 @@
       .aiatt .anm{font-size:.82rem;font-weight:700;max-width:150px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
       .aiatt .asz{font-size:.75rem;color:var(--muted);}
       .aiatt .arm{background:none;border:none;font-size:1rem;line-height:1;cursor:pointer;color:var(--missing);padding:6px;min-width:36px;min-height:36px;}
-      .aibar{display:flex;gap:8px;align-items:flex-end;margin-top:8px;}
-      .aibar textarea{flex:1 1 auto;min-width:0;min-height:56px;max-height:130px;margin:0;}
+      .aibar{margin-top:8px;}
+      .aibar textarea{width:100%;min-height:118px;max-height:260px;margin:0;font-size:1.06rem;line-height:1.5;resize:none;overflow-y:auto;}
+      .aiact{display:flex;gap:8px;align-items:center;margin-top:8px;}
+      .aiactsp{flex:1 1 auto;}
+      .aimodehint{font-weight:700;color:var(--accent-strong);margin:8px 0 0;}
+      #ai-mic-status{margin:6px 0 0;min-height:1.35em;}
+      #ai-mic-status.err{color:var(--missing);font-weight:700;}
+      .soundbadge{display:inline-block;font-weight:800;padding:8px 12px;border-radius:10px;margin:10px 0 2px;font-size:.98rem;}
+      .soundbadge.silent{background:var(--warn-soft);color:var(--warn);border:1.5px solid var(--warn);}
+      .soundbadge.voice{background:var(--good-soft);color:var(--good);border:1.5px solid var(--good);}
+      .aistudio canvas{width:100%;max-width:340px;height:auto;border-radius:18px;display:block;background:var(--surface2);margin:10px auto;}
+      .aistudio video{width:100%;max-width:340px;border-radius:18px;display:block;background:#000;margin:10px auto;}
       .aibtn{flex:0 0 auto;min-width:54px;min-height:56px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-size:1.35rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 8px;}
       .aibtn svg{width:24px;height:24px;fill:currentColor;display:block;}
       .aibtn.aisend{background:var(--accent);border-color:var(--accent);color:#fff;font-size:1rem;padding:0 14px;}
@@ -290,11 +300,16 @@
           <div id="ai-thread" class="aithread" aria-live="polite"></div>
           <div id="ai-atts" class="aiatts"></div>
           <div class="aibar">
-            <button class="aibtn" id="ai-attach" type="button" aria-label="Adjuntar / Attach">+</button>
-            <textarea id="ai-text" rows="2" data-i18n-ph="aiph" placeholder="Escribe lo que quieres crear…"></textarea>
-            <button class="aibtn" id="ai-mic" type="button" aria-label="Dictar / Dictate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.5 7.44V21h2v-2.06A7.5 7.5 0 0 0 19.5 11.5H18z"/></svg></button>
-            <button class="aibtn aisend" id="ai-send" type="button" data-i18n="aisend">Enviar</button>
+            <textarea id="ai-text" rows="4" data-i18n-ph="aiph" placeholder="Escribe lo que quieres crear…"></textarea>
+            <div class="aiact">
+              <button class="aibtn" id="ai-attach" type="button" aria-label="Adjuntar / Attach">+</button>
+              <button class="aibtn" id="ai-mic" type="button" aria-label="Dictar / Dictate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.5 7.44V21h2v-2.06A7.5 7.5 0 0 0 19.5 11.5H18z"/></svg></button>
+              <span class="aiactsp"></span>
+              <button class="aibtn aisend" id="ai-send" type="button" data-i18n="aisend">Enviar</button>
+            </div>
           </div>
+          <p class="aimodehint small" id="ai-mode-hint" role="status"></p>
+          <p class="muted small" id="ai-mic-status" role="status" aria-live="polite"></p>
           <input type="file" id="ai-file" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.md" multiple hidden />
           <p class="muted small" id="ai-status" role="status" aria-live="polite"></p>
           <div id="ai-restored" class="addline" style="margin:8px 0;" hidden></div>
@@ -322,32 +337,37 @@
         <h1 data-i18n="h1">Tu negocio, en una página, en un minuto</h1>
         <p class="big" data-i18n="intro">Di lo que haces — hablando o escribiendo — y recibes tres cosas: una página con tus datos, las respuestas a las preguntas que hacen los clientes, y un mensaje listo para enviar.</p>
 
-        <div class="micwrap">
+        <!-- Legacy home input controls: permanently hidden by the
+             repair pass. The composer above is the ONLY instruction
+             surface; these elements stay in the DOM because the
+             classic generators read them (saybox is the internal
+             hand-off), but they are never shown again. -->
+        <div class="micwrap" hidden>
           <button class="mic" id="mic-main" type="button" aria-label="Hablar / Talk">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.5 7.44V21h2v-2.06A7.5 7.5 0 0 0 19.5 11.5H18z"/></svg>
           </button>
           <div class="micnote muted small" id="mic-note" data-i18n="michint">Toca el micrófono y di lo que haces</div>
         </div>
 
-        <label class="big" for="saybox" style="font-weight:700;" data-i18n="saylabel">O escríbelo aquí:</label>
-        <textarea id="saybox" data-i18n-ph="sayph" placeholder="Ejemplo: Corto cabello en Houston. Martes a sábado. $25. Sin cita. Mujeres y niños."></textarea>
-        <p class="muted small" data-i18n="sayhelp">Una sola frase está bien: qué haces, en qué ciudad, qué días y horas, cuánto cobras, si es sin cita o con cita, y tu teléfono si quieres que aparezca.</p>
+        <label class="big" for="saybox" style="font-weight:700;" data-i18n="saylabel" hidden>O escríbelo aquí:</label>
+        <textarea id="saybox" data-i18n-ph="sayph" placeholder="Ejemplo: Corto cabello en Houston. Martes a sábado. $25. Sin cita. Mujeres y niños." hidden></textarea>
+        <p class="muted small" data-i18n="sayhelp" hidden>Una sola frase está bien: qué haces, en qué ciudad, qué días y horas, cuánto cobras, si es sin cita o con cita, y tu teléfono si quieres que aparezca.</p>
 
-        <div class="addrow">
+        <div class="addrow" hidden>
           <button class="btn ghost" id="photo-btn" type="button" data-i18n="photobtn">Foto</button>
           <button class="btn ghost" id="link-btn" type="button" data-i18n="linkbtn">Enlace</button>
           <button class="btn ghost" id="ownvideo-btn" type="button" data-i18n="videobtn">Video</button>
         </div>
         <input type="file" id="photo-in" accept="image/*" hidden />
-        <div id="photo-preview"></div>
+        <div id="photo-preview" hidden></div>
         <input type="file" id="ownvideo-in" accept="video/*" hidden />
-        <div id="ownvideo-preview"></div>
+        <div id="ownvideo-preview" hidden></div>
         <div id="link-wrap" hidden>
           <input type="text" id="link-in" data-i18n-ph="linkph" placeholder="Pega tu enlace de Facebook, Instagram o Google" inputmode="url" autocomplete="off" />
           <p class="muted small" data-i18n="linknote">Solo ponemos el enlace como botón en tu página. No lo abrimos ni copiamos nada de él.</p>
         </div>
 
-        <button class="btn" id="go-make" type="button" data-i18n="makebtn">Crear mi página</button>
+        <button class="btn" id="go-make" type="button" data-i18n="makebtn" hidden>Crear mi página</button>
 
         <div class="honest" data-i18n="honest">Honestidad primero: recibes la página, las respuestas y los mensajes, hechos solo con tus palabras. Ninguna aplicación promete que un buscador o una IA te va a mostrar — eso lo decide cada plataforma. Lo que sí tienes es algo verdadero y listo para compartir.</div>
 
@@ -466,14 +486,6 @@
           <h2 data-i18n="videoh">Tu video</h2>
           <p class="muted" data-i18n="videop">El mismo contenido de tu página, como un video vertical corto con tus datos exactos — sin nada inventado. Toca «Crear el video para descargar» y al terminar tú eliges: descargarlo a tu teléfono o compartirlo. Si agregaste una foto, se mueve con un suave efecto de profundidad 3D: tu propia foto y tus palabras, con profundidad, hecho en este teléfono.</p>
           <div class="videoframe"><canvas id="vcanvas" width="720" height="1280"></canvas><video id="vfile" controls playsinline hidden></video></div>
-          <div class="btnrow">
-            <button class="btn smallbtn" id="vrec" type="button" data-i18n="vrec">Crear el video para descargar</button>
-            <button class="btn smallbtn ghost" id="vplay" type="button" data-i18n="vplay">Ver el video</button>
-            <a class="btn smallbtn" id="vdl" href="#" download="mi-negocio.webm" hidden data-i18n="vdl">Descargar el video</a>
-            <button class="btn smallbtn" id="vshare" type="button" hidden data-i18n="vshare">Compartir o guardar el video</button>
-          </div>
-          <p class="muted small" id="vnote"></p>
-
           <div class="card" id="vo-block" style="margin-top:12px;">
             <label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;cursor:pointer;">
               <input type="checkbox" id="vo-on" style="width:22px;height:22px;flex:0 0 auto;margin-top:2px;">
@@ -483,6 +495,15 @@
             <p class="muted small" data-i18n="voisoundnote">Sobre el sonido: un video descargado lleva solo los textos escritos — la voz del presentador no queda grabada en el archivo; suena en vivo mientras presentas en pantalla.</p>
             <p class="muted small" id="vo-status" role="status" aria-live="polite"></p>
           </div>
+          <div class="btnrow">
+            <button class="btn smallbtn" id="vrec" type="button" data-i18n="vrec">Crear el video para descargar</button>
+            <button class="btn smallbtn ghost" id="vplay" type="button" data-i18n="vplay">Ver el video</button>
+            <a class="btn smallbtn" id="vdl" href="#" download="mi-negocio.webm" hidden data-i18n="vdl">Descargar el video</a>
+            <button class="btn smallbtn" id="vshare" type="button" hidden data-i18n="vshare">Compartir o guardar el video</button>
+          </div>
+          <div><span class="soundbadge silent" id="vbadge" hidden></span></div>
+          <p class="muted small" id="vnote"></p>
+          <button class="btn ghost" id="v-present-btn" type="button" data-i18n="watchnarr">Ver con narración (suena en este dispositivo)</button>
         </div>
 
         <hr class="divider" />
@@ -571,6 +592,23 @@ var T = {
     aiactions:"Toca CREAR PÁGINA para generar tu página con estos datos, o sigue escribiendo para corregirlos.",
     aichatoff:"El chat con IA todavía no está conectado: no hay un servidor de IA detrás de esta página, así que no puedo conversar libremente ni inventar contenido. Lo que sí funciona aquí, en tu teléfono, es convertir tus palabras en una página, un post y un video. Escribe los datos de tu negocio (qué haces, ciudad, días, horas, precio) y toca CREAR PÁGINA.",
     aicreatefirst:"Primero escribe o dicta tus instrucciones en el cuadro de la IA.",
+    aimodeshop:"Modo detectado: negocio local",
+    aimodemnq:"Modo detectado: MNQ · posts para X",
+    aimnqrouted:"Modo MNQ: preparé tus hilos para X con tu propio texto, sin cambiar ni una cifra. Revísalos antes de compartir.",
+    aimiclistening:"Escuchando… tus palabras aparecen en el cuadro mientras hablas. Toca el micrófono para parar.",
+    aimicdenied:"El micrófono está bloqueado para esta página. Actívalo en los ajustes de tu navegador (el candado junto a la dirección → Micrófono → Permitir) y toca el micrófono otra vez.",
+    aimicnetwork:"El reconocimiento de voz de este teléfono necesita conexión a internet y ahora no hay. Tu voz no se convirtió en texto. Escríbelo o inténtalo cuando vuelva la conexión.",
+    aimicnospeech:"No se escuchó tu voz. Acércate al micrófono e inténtalo de nuevo.",
+    aimicaborted:"El dictado se detuvo.",
+    aimicnoaudio:"No se encontró un micrófono disponible en este dispositivo.",
+    aimicfailed:"El dictado por voz falló",
+    aimicnosupport:"El dictado por voz no está disponible en este dispositivo o navegador. Escribir funciona igual de bien.",
+    aivideoackh:"Tu instrucción",
+    aivideoatts:"Adjuntos: ",
+    aivideotextd:"Tu instrucción no trae datos de un negocio, así que el video se crea con tus propias palabras y tu foto adjunta, aquí en tu teléfono.",
+    badgesilent:"🔇 Sin sonido — solo los textos escritos (subtítulos).",
+    badgevoice:"🔊 Con tu voz grabada en el video.",
+    watchnarr:"Ver con narración (suena en este dispositivo)",
     ailinkgoing:"Generando tu página con tus palabras. Revisa tus datos y confirma para crearla.",
     aishareh:"Compartir tu página",
     aihostedoff:"Enlace alojado: todavía no disponible. El servicio de páginas aún no está conectado, así que tu página no tiene una dirección web propia por ahora. Descargarla o copiarla funciona ya: el archivo descargado es tu página completa.",
@@ -763,6 +801,23 @@ var T = {
     aiactions:"Tap CREATE LINK to generate your page with these facts, or keep typing to correct them.",
     aichatoff:"The AI chat is not connected yet: there is no AI server behind this page today, so I can't hold a free conversation or invent content. What does work here, on your phone, is turning your words into a page, a post and a video. Write your business details (what you do, city, days, hours, price) and tap CREATE LINK.",
     aicreatefirst:"First type or dictate your instructions in the AI box.",
+    aimodeshop:"Detected mode: local shop",
+    aimodemnq:"Detected mode: MNQ · X posts",
+    aimnqrouted:"MNQ mode: I prepared your X threads from your own text, without changing a single number. Review them before sharing.",
+    aimiclistening:"Listening… your words appear in the box as you speak. Tap the mic to stop.",
+    aimicdenied:"The microphone is blocked for this page. Allow it in your browser settings (the lock icon by the address → Microphone → Allow), then tap the mic again.",
+    aimicnetwork:"Voice recognition on this phone needs an internet connection and there is none right now. Your voice was not turned into text. Type it, or try again when the connection is back.",
+    aimicnospeech:"No speech was heard. Move closer to the microphone and try again.",
+    aimicaborted:"Dictation stopped.",
+    aimicnoaudio:"No microphone is available on this device.",
+    aimicfailed:"Voice typing failed",
+    aimicnosupport:"Voice typing isn't available on this device or browser. Typing works just as well.",
+    aivideoackh:"Your instruction",
+    aivideoatts:"Attachments: ",
+    aivideotextd:"Your instruction has no business details, so the video is made from your own words and your attached photo, right here on your phone.",
+    badgesilent:"🔇 No sound — written captions only.",
+    badgevoice:"🔊 Includes your recorded voice.",
+    watchnarr:"Watch with narration (plays on this device)",
     ailinkgoing:"Generating your page from your words. Review your facts and confirm to create it.",
     aishareh:"Share your page",
     aihostedoff:"Hosted link: not available yet. The page service is not connected, so your page has no web address of its own for now. Downloading or copying works now: the downloaded file is your complete page.",
@@ -1852,6 +1907,7 @@ function renderVideoPoster(){
   if (vf){ vf.removeAttribute("src"); vf.hidden = true; }
   $("vdl").hidden = true;
   $("vshare").hidden = true;
+  var bd = $("vbadge"); if (bd){ bd.hidden = true; bd.textContent = ""; }
   $("vnote").textContent = "";
   /* the create/download button is ALWAYS shown — never hidden —
      so the owner always sees the choice to make and download the video */
@@ -1864,6 +1920,11 @@ function renderVideoPoster(){
 function recordVideo(){
   var canvas = $("vcanvas");
   if (vid.playing) return;
+  /* Sound truth for THIS recording, read at start: the owner's
+     voice is in the file only if the voice-over mic stream is
+     live right now (the canvasStreamOf hook mixes it in). The
+     badge set on stop reports exactly this — never a guess. */
+  var recHadVoice = (typeof voStream !== "undefined" && !!voStream);
   if (!recorderSupported(canvas)){
     playVideo();
     $("vnote").textContent = tt("vnosupport");
@@ -1913,6 +1974,14 @@ function recordVideo(){
        (send it to WhatsApp, or save it to the device from the sheet) */
     $("vshare").hidden = !shareFileSupported();
     $("vnote").textContent = tt("vready");
+    /* Explicit sound badge next to the download choice, set BEFORE
+       the owner can download: silent files say so, voice files say so. */
+    var bd = $("vbadge");
+    if (bd){
+      bd.textContent = tt(recHadVoice ? "badgevoice" : "badgesilent");
+      bd.className = "soundbadge " + (recHadVoice ? "voice" : "silent");
+      bd.hidden = false;
+    }
     $("vrec").disabled = false;
     $("vplay").disabled = false;
     dl.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -2462,7 +2531,17 @@ var aiAtts = [];           // {name, mime, size, file, kind, thumb}
 var aiWantVideo = false;   // on-device CREATE VIDEO waiting for confirm
 var aiHostedUrl = "";      // set only when a publish really returns a URL
 
-function aiCurrentInstruction(){ return aiInstructions.join("\n"); }
+/* THE single instruction source (repair pass, Fix 3): everything
+   the owner has sent this session PLUS whatever is typed in the
+   composer right now. Creation buttons read this at tap time —
+   never a stale copy, never the classic saybox state. aiSend pushes
+   the field into aiInstructions and clears it, so nothing doubles. */
+function aiCurrentInstruction(){
+  var parts = aiInstructions.slice();
+  var cur = ($("ai-text") && $("ai-text").value || "").trim();
+  if (cur) parts.push(cur);
+  return parts.join("\n").trim();
+}
 function aiFirstImage(){
   for (var i = 0; i < aiAtts.length; i++){ if (aiAtts[i].kind === "image") return aiAtts[i]; }
   return null;
@@ -2623,9 +2702,35 @@ function aiCardText(card, tag, text){
    backend is connected — a real hosted-link attempt. A page is
    NOT called a shareable link until a hosted URL actually
    resolves; while undeployed the state says so plainly. */
+/* ---------------- mode detection ----------------
+   The one composer serves both flows. An instruction that is
+   clearly MNQ market content (mentions MNQ plus a snapshot, a
+   chart, X posts, or real level numbers) engages the MNQ thread
+   formatter; anything else engages the local-shop flow. The hint
+   under the composer always shows which mode was detected. */
+function aiIsMnq(text){
+  if (!text || !/\bmnq\b/i.test(text)) return false;
+  return /snapshot|resumen|chart|gr[aá]fico|\bposts?\b|\b\d{4,}\b|\b\d{1,3}[.,]\d{3}\b/i.test(text);
+}
+function aiModeHint(){
+  var el = $("ai-mode-hint"); if (!el) return;
+  var t = aiCurrentInstruction();
+  el.textContent = t ? tt(aiIsMnq(t) ? "aimodemnq" : "aimodeshop") : "";
+}
+function aiRouteMnq(instr){
+  var mb = $("mode-mnq");
+  if (mb) mb.click();
+  var snap = $("mnq-snapshot");
+  if (snap) snap.value = instr;
+  aiAddMsg("assistant", tt("aimnqrouted"));
+  var form = $("mnq-form");
+  if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+}
+
 function aiCreateLink(){
   var instr = aiCurrentInstruction();
   if (!instr){ $("ai-status").textContent = tt("aicreatefirst"); $("ai-text").focus(); return; }
+  if (aiIsMnq(instr)){ aiRouteMnq(instr); return; }
   var img = aiFirstImage();
   if (img) loadPhotoFile(img.file);
   $("saybox").value = instr;
@@ -2669,10 +2774,10 @@ function aiPhotoBlocked(){
     else { $("ai-status").textContent = tt("aineedphoto"); }
   });
   c.appendChild(b);
-  c.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function aiCreatePhoto(){
+  if (!aiCurrentInstruction() && !aiAtts.length){ $("ai-status").textContent = tt("aicreatefirst"); $("ai-text").focus(); return; }
   $("ai-output").innerHTML = "";
   if (window.CLARO_AI.endpoint){
     var wait = aiOutputCard("");
@@ -2710,27 +2815,199 @@ function aiCreatePhoto(){
    B) AI presenter video — only through the backend contract.
       While unconfigured it stays UNAVAILABLE with the exact
       blocker named. No simulated progress, ever. */
+/* Does the instruction carry real business facts (the classic
+   page/post/video machinery's input)? If not — a free-form or
+   MNQ-flavoured instruction — the on-device video is built from
+   the instruction's own words instead (aiBuildTextScenes), never
+   from unrelated shop defaults. */
+function aiBusinessLike(f){
+  return !!(f && (f.name || f.services || f.price || f.phone || f.days || f.hours ||
+                  (f.trade && f.trade !== "general")));
+}
+
+/* Wait (briefly) for an attached image to finish decoding into
+   photoImg, so the video's photo scene uses the real attachment. */
+function aiEnsurePhoto(done){
+  var img = aiFirstImage();
+  if (!img || photoImg){ done(); return; }
+  loadPhotoFile(img.file);
+  var tries = 0;
+  (function poll(){
+    if (photoImg || tries >= 20){ done(); return; }
+    tries++;
+    setTimeout(poll, 150);
+  })();
+}
+
+/* Scenes from the owner's own words: the instruction split into
+   short chunks, one per scene, the attached photo (if any) on the
+   first. Nothing is invented — every word on screen is theirs. */
+function aiBuildTextScenes(instr){
+  var chunks = [];
+  presSplit(instr).forEach(function(s){
+    var words = s.split(/\s+/).filter(Boolean), cur = "";
+    words.forEach(function(w){
+      if (cur && (cur + " " + w).length > 110){ chunks.push(cur); cur = w; }
+      else cur = cur ? cur + " " + w : w;
+    });
+    if (cur) chunks.push(cur);
+  });
+  chunks = chunks.slice(0, 6);
+  if (!chunks.length) chunks = [instr.slice(0, 110)];
+  return chunks.map(function(c, i){
+    return { photo: (i === 0 && photoImg) ? photoImg : null, kicker: "", title: c, sub: "" };
+  });
+}
+
+/* Play scenes on a canvas without recording (preview). */
+function aiPlayScenes(cv, scenes, onDone){
+  var ctx = cv.getContext("2d");
+  vid.scenes = scenes;
+  var start = null, total = scenes.length * SCENE_MS, live = true;
+  function frame(ts){
+    if (!live) return;
+    if (!start) start = ts;
+    var el = ts - start;
+    if (el >= total){ drawScene(ctx, scenes[scenes.length - 1], 1, 0); if (onDone) onDone(); return; }
+    var idx = Math.floor(el / SCENE_MS);
+    drawSceneAt(ctx, idx, (el - idx * SCENE_MS) / SCENE_MS);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  return function(){ live = false; };
+}
+
+/* Record scenes into a real file, right inside the AI card.
+   Reuses the app's one frame renderer and the canvasStreamOf
+   hook, so the owner's voice-over (when the mic stream is live)
+   is mixed in exactly like the classic studio — and the badge
+   reports the truth about THIS file's sound. */
+function aiRecordScenes(studio, scenes, btn){
+  var cv = studio.querySelector("canvas");
+  if (!recorderSupported(cv)){ studio.querySelector(".aistatus").textContent = tt("vnosupport"); return; }
+  var stream = canvasStreamOf(cv);
+  if (!stream){ studio.querySelector(".aistatus").textContent = tt("vnosupport"); return; }
+  var mime = "";
+  ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].forEach(function(m){
+    if (!mime && typeof MediaRecorder.isTypeSupported === "function" && MediaRecorder.isTypeSupported(m)) mime = m;
+  });
+  var rec;
+  try { rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 5000000 } : { videoBitsPerSecond: 5000000 }); }
+  catch (e){ studio.querySelector(".aistatus").textContent = tt("vnosupport"); return; }
+  var hadVoice = !!voStream;
+  var chunks = [];
+  rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = function(){
+    var blob = new Blob(chunks, { type: (rec.mimeType || mime || "video/webm").split(";")[0] });
+    var url = URL.createObjectURL(blob);
+    var v = studio.querySelector("video");
+    v.src = url; v.hidden = false;
+    cv.hidden = true;
+    var dl = studio.querySelector("a.aidl");
+    dl.href = url;
+    dl.download = "video-one-minute-page" + (blob.type.indexOf("mp4") >= 0 ? ".mp4" : ".webm");
+    dl.hidden = false;
+    var bd = studio.querySelector(".soundbadge");
+    bd.textContent = tt(hadVoice ? "badgevoice" : "badgesilent");
+    bd.className = "soundbadge " + (hadVoice ? "voice" : "silent");
+    bd.hidden = false;
+    studio.querySelector(".aistatus").textContent = tt("vready");
+    btn.disabled = false;
+    if (hadVoice) voRelease();
+  };
+  btn.disabled = true;
+  studio.querySelector(".aistatus").textContent = tt("vrecording");
+  rec.start(250);
+  aiPlayScenes(cv, scenes, function(){ setTimeout(function(){ try { rec.stop(); } catch (e){} }, 200); });
+}
+
 function aiCreateVideo(){
+  var instr = aiCurrentInstruction();
+  if (!instr && !aiAtts.length){ $("ai-status").textContent = tt("aicreatefirst"); $("ai-text").focus(); return; }
   $("ai-output").innerHTML = "";
 
+  /* 1) Acknowledge THIS instruction + THESE attachments, in place.
+        Nothing scrolls anywhere; the work happens in this area. */
+  var ack = aiOutputCard("");
+  aiCardText(ack, "h3", tt("aivideoackh"));
+  aiCardText(ack, "p", instr.length > 400 ? instr.slice(0, 400) + "…" : instr);
+  if (aiAtts.length) aiCardText(ack, "p", tt("aivideoatts") + aiAtts.map(function(x){ return x.name; }).join(", "));
+
+  /* 2) On-device video — works now, built from the instruction. */
   var a = aiOutputCard("");
   aiCardText(a, "h3", tt("aivideodeviceh"));
   aiCardText(a, "p", tt("aivideodeviced"));
+  var parsed = parseWords(instr);
+  var business = aiBusinessLike(parsed);
+  if (instr && !business) aiCardText(a, "p", tt("aivideotextd"));
   var aNote = aiCardText(a, "p", tt("voisoundnote"));
   aNote.className = "muted small";
+  /* Voice-over opt-in AT this card (repair pass, Fix 4b): checking
+     it drives the classic studio's own checkbox, so the mic
+     permission ask and the stream are the app's single mechanism. */
+  var voLabel = document.createElement("label");
+  voLabel.style.cssText = "display:flex;gap:10px;align-items:flex-start;font-weight:700;cursor:pointer;margin-top:8px;";
+  var voCb = document.createElement("input");
+  voCb.type = "checkbox"; voCb.id = "ai-vo-on";
+  voCb.style.cssText = "width:22px;height:22px;flex:0 0 auto;margin-top:2px;";
+  if ($("vo-on") && $("vo-on").checked) voCb.checked = true;
+  var voSpan = document.createElement("span"); voSpan.textContent = tt("voon");
+  voLabel.appendChild(voCb); voLabel.appendChild(voSpan);
+  a.appendChild(voLabel);
+  var voStat = aiCardText(a, "p", ""); voStat.className = "muted small"; voStat.id = "ai-vo-status";
+  voCb.addEventListener("change", function(){
+    var main = $("vo-on");
+    if (main && main.checked !== voCb.checked){
+      main.checked = voCb.checked;
+      main.dispatchEvent(new Event("change"));
+    }
+    if (!voCb.checked && typeof voRelease === "function") voRelease();
+  });
+  if (window.MutationObserver && $("vo-status")){
+    new MutationObserver(function(){
+      var s = $("ai-vo-status"); if (s) s.textContent = $("vo-status").textContent;
+    }).observe($("vo-status"), { childList: true, characterData: true, subtree: true });
+  }
   var ab = document.createElement("button");
   ab.type = "button"; ab.className = "btn"; ab.textContent = tt("aivideodevicebtn");
-  ab.addEventListener("click", function(){
-    var instr = aiCurrentInstruction() || ($("saybox").value || "").trim();
-    if (!instr){ $("ai-status").textContent = tt("aicreatefirst"); $("ai-text").focus(); return; }
-    var img = aiFirstImage();
-    if (img) loadPhotoFile(img.file);
-    $("saybox").value = instr;
-    aiWantVideo = true;
-    aiAddMsg("assistant", tt("aireviewfacts"));
-    $("go-make").click();
-  });
   a.appendChild(ab);
+  /* Inline studio for the free-form path: canvas, progress, the
+     finished file, its download and its sound badge — all here. */
+  var studio = document.createElement("div");
+  studio.className = "aistudio"; studio.hidden = true;
+  studio.innerHTML = '<canvas width="720" height="1280" hidden></canvas>' +
+    '<video controls playsinline hidden></video>' +
+    '<p class="muted small aistatus" role="status" aria-live="polite"></p>' +
+    '<div><span class="soundbadge silent" hidden></span></div>' +
+    '<a class="btn smallbtn aidl" href="#" hidden>' + esc(tt("vdl")) + '</a> ' +
+    '<button type="button" class="btn smallbtn ghost aiwatch">' + esc(tt("watchnarr")) + '</button>';
+  a.appendChild(studio);
+  studio.querySelector(".aiwatch").addEventListener("click", function(){ aiOpenPresenter(); });
+  ab.addEventListener("click", function(){
+    var cur = aiCurrentInstruction();
+    if (!cur){ $("ai-status").textContent = tt("aicreatefirst"); $("ai-text").focus(); return; }
+    var f2 = parseWords(cur);
+    if (aiBusinessLike(f2)){
+      var img = aiFirstImage();
+      if (img) loadPhotoFile(img.file);
+      $("saybox").value = cur;
+      aiWantVideo = true;
+      aiAddMsg("assistant", tt("aireviewfacts"));
+      $("go-make").click();
+      return;
+    }
+    facts = f2; isSample = false; currentSample = null;
+    studio.hidden = false;
+    aiEnsurePhoto(function(){
+      var scenes = aiBuildTextScenes(cur);
+      var cv = studio.querySelector("canvas");
+      cv.hidden = false;
+      studio.querySelector("video").hidden = true;
+      studio.querySelector("a.aidl").hidden = true;
+      studio.querySelector(".soundbadge").hidden = true;
+      aiRecordScenes(studio, scenes, ab);
+    });
+  });
 
   var pc = aiOutputCard("");
   aiCardText(pc, "h3", tt("presenth"));
@@ -2776,7 +3053,6 @@ function aiCreateVideo(){
   } else {
     aiVideoBlocked();
   }
-  a.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function aiVideoBlocked(){
@@ -2831,20 +3107,91 @@ $("ai-file").addEventListener("change", function(){
   this.value = "";
 });
 $("ai-send").addEventListener("click", aiSend);
+
+/* ---------------- composer microphone: real dictation ----------------
+   The composer's ONE mic behavior (repair pass, Fix 5): speech-to-
+   text INTO the instruction field. Interim words appear in the
+   field as they are spoken; final results are committed by the
+   same cumulative-results pass. The button's state mirrors the
+   recognition object's own events (onstart/onend/onerror) — never
+   a timer. Every failure lands in #ai-mic-status with a specific
+   bilingual message:
+     not-allowed / service-not-allowed → how to enable the mic
+     network                           → recognition needs internet
+     no-speech                         → nothing heard
+     audio-capture                     → no microphone found
+     aborted                           → stopped
+   No recognition API at all → an explicit "not available" note,
+   and the button never enters a recording state.
+   Language choice (documented): recognition follows the app
+   language — en-US for English, es-US for Spanish (consistent with
+   the app's existing voice choices and the founder's US locale).
+   Real Android Chrome dictation remains a device check: headless
+   tests inject a fake recognition object to prove this wiring. */
+var aiRecog = null, aiRecogErr = false;
+function aiMicStatus(key, isErr, extra){
+  var el = $("ai-mic-status"); if (!el) return;
+  el.textContent = key ? tt(key) + (extra || "") : "";
+  el.classList.toggle("err", !!isErr);
+}
 $("ai-mic").addEventListener("click", function(){
+  var btn = this;
+  if (aiRecog){ try { aiRecog.stop(); } catch (e){} return; }
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR){ aiAddMsg("assistant", tt("micnomic")); return; }
-  var btn = this, before = $("ai-text").value;
-  toggleMic(btn, $("ai-text"));
-  /* If recognition died instantly (no speech service / permission),
-     toggleMic removes the listening state and nothing was dictated —
-     say so honestly instead of failing silently. */
-  setTimeout(function(){
-    if (!btn.classList.contains("listening") && $("ai-text").value === before){
-      aiAddMsg("assistant", tt("micnomic"));
-    }
-  }, 1600);
+  if (!SR){ aiMicStatus("aimicnosupport", true); return; }
+  var field = $("ai-text");
+  var base = field.value ? field.value.replace(/\s+$/, "") + " " : "";
+  var r;
+  try { r = new SR(); } catch (e){ aiMicStatus("aimicnosupport", true); return; }
+  aiRecog = r; aiRecogErr = false;
+  r.lang = (lang === "es" ? "es-US" : "en-US");
+  r.interimResults = true;
+  r.continuous = false;
+  r.onstart = function(){
+    btn.classList.add("listening");
+    aiMicStatus("aimiclistening", false);
+  };
+  r.onresult = function(ev){
+    var txt = "";
+    for (var i = 0; i < ev.results.length; i++) txt += ev.results[i][0].transcript;
+    field.value = base + txt;
+    aiGrowText();
+    if (typeof aiPersist === "function") aiPersist();
+  };
+  r.onerror = function(ev){
+    aiRecogErr = true;
+    btn.classList.remove("listening");
+    var code = (ev && ev.error) || "";
+    if (code === "not-allowed" || code === "service-not-allowed") aiMicStatus("aimicdenied", true);
+    else if (code === "network") aiMicStatus("aimicnetwork", true);
+    else if (code === "no-speech") aiMicStatus("aimicnospeech", true);
+    else if (code === "audio-capture") aiMicStatus("aimicnoaudio", true);
+    else if (code === "aborted") aiMicStatus("aimicaborted", true);
+    else aiMicStatus("aimicfailed", true, code ? " (" + code + ")" : "");
+  };
+  r.onend = function(){
+    aiRecog = null;
+    btn.classList.remove("listening");
+    aiModeHint();
+    if (!aiRecogErr) aiMicStatus("", false);
+  };
+  try { r.start(); }
+  catch (e){
+    aiRecog = null;
+    btn.classList.remove("listening");
+    aiMicStatus("aimicfailed", true);
+  }
 });
+
+/* ---------------- composer field: auto-grow + mode hint ---------------- */
+function aiGrowText(){
+  var t = $("ai-text"); if (!t) return;
+  t.style.height = "auto";
+  t.style.height = Math.min(t.scrollHeight, 260) + "px";
+}
+$("ai-text").addEventListener("input", function(){ aiGrowText(); aiModeHint(); });
+$("lang-es").addEventListener("click", function(){ setTimeout(function(){ aiModeHint(); aiGrowText(); }, 0); });
+$("lang-en").addEventListener("click", function(){ setTimeout(function(){ aiModeHint(); aiGrowText(); }, 0); });
 $("ai-link").addEventListener("click", aiCreateLink);
 $("ai-photo").addEventListener("click", aiCreatePhoto);
 $("ai-video").addEventListener("click", aiCreateVideo);
@@ -3046,6 +3393,8 @@ function aiOpenPresenter(){
 
 var presBtn = $("ai-present-btn");
 if (presBtn) presBtn.addEventListener("click", aiOpenPresenter);
+var vPresBtn = $("v-present-btn");
+if (vPresBtn) vPresBtn.addEventListener("click", aiOpenPresenter);
 $("pres-play").addEventListener("click", presPlay);
 $("pres-pause").addEventListener("click", function(){
   if (presState.mode === "speaking"){
@@ -3097,6 +3446,7 @@ function voRelease(){
     voStream = null;
   }
   var cb = $("vo-on"); if (cb) cb.checked = false;
+  var av = $("ai-vo-on"); if (av) av.checked = false;
 }
 
 if (typeof canvasStreamOf === "function"){
@@ -3178,7 +3528,7 @@ function aiSwInit(){
     return navigator.serviceWorker.ready;
   }).then(function(){
     if (window.caches){
-      caches.open("claro-omp-v1").then(function(c){ return c.add(location.href.split("#")[0]); }).catch(function(){});
+      caches.open("claro-omp-v2").then(function(c){ return c.add(location.href.split("#")[0]); }).catch(function(){});
     }
     set(tt("swready"));
   }).catch(function(){ set(tt("swnot")); });
@@ -3314,9 +3664,21 @@ function aiApplyState(st, idbAtts, idbPhoto){
   }
   if (st.saybox) { $("saybox").value = st.saybox; had = true; }
   if (st.aiText) $("ai-text").value = st.aiText;
+  if (typeof aiGrowText === "function") aiGrowText();
+  if (typeof aiModeHint === "function") aiModeHint();
   if (Array.isArray(st.instructions) && st.instructions.length){
-    aiInstructions = st.instructions.slice();
-    aiInstructions.forEach(function(t){ aiAddMsg("user", t); });
+    /* Restored instructions go back into the FIELD — visible and
+       editable — never into a hidden active set (repair pass,
+       Fix 3): after a reopen, the field is the one instruction
+       source, so nothing from a previous session can merge into a
+       new creation invisibly. The owner sees the text, keeps it,
+       edits it, or clears it. */
+    var prev = st.instructions.join("\n");
+    var draft = ($("ai-text").value || "").trim();
+    $("ai-text").value = (draft && draft !== prev) ? prev + "\n" + draft : prev;
+    aiInstructions = [];
+    if (typeof aiGrowText === "function") aiGrowText();
+    if (typeof aiModeHint === "function") aiModeHint();
     had = true;
   }
   var hasPage = false;

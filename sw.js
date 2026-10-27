@@ -12,14 +12,32 @@
 // attach, on-device video, and the built-in presenter are all
 // local. AI service calls are POSTs — never intercepted here —
 // and the app labels them as requiring internet when offline.
-const CACHE = "claro-omp-v1";
+//
+// Version history:
+//   v2 (2026-10-27 repair pass) — cache name bumped so a phone that
+//      cached candidate v1 drops the old document: on activate,
+//      every cache other than the current one is deleted, so the
+//      next ONLINE open fetches and caches the corrected document.
+//      The founder's first re-test open must be online.
+const CACHE = "claro-omp-v2";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches
+      .keys()
+      .then((names) =>
+        Promise.all(
+          names
+            .filter((n) => n !== CACHE)
+            .map((n) => caches.delete(n))
+        )
+      )
+      .then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener("fetch", (event) => {
